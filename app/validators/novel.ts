@@ -10,6 +10,13 @@ const optionalNumber = () =>
       return Number.isNaN(n) ? undefined : n
     })
 
+const optionalCoverImageUrl = () =>
+  vine
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v && v.length > 0 ? v : undefined))
+
 export const createNovelValidator = vine.compile(
   vine.object({
     title: vine.string().trim().minLength(1).maxLength(255),
@@ -19,6 +26,7 @@ export const createNovelValidator = vine.compile(
     personalReview: vine.string().trim().optional(),
     externalLink: vine.string().trim().optional(),
     numberOfChapters: optionalNumber(),
+    coverImageUrl: optionalCoverImageUrl(),
   }),
 )
 
@@ -31,5 +39,6 @@ export const updateNovelValidator = vine.compile(
     personalReview: vine.string().trim().optional(),
     externalLink: vine.string().trim().optional(),
     numberOfChapters: optionalNumber(),
+    coverImageUrl: optionalCoverImageUrl(),
   }),
 )

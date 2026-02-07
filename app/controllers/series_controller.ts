@@ -61,6 +61,17 @@ export default class SeriesController {
       series.coverImage = (await attachmentManager.createFromFile(coverFile)) as NonNullable<
         Series['coverImage']
       >
+    } else if (payload.coverImageUrl) {
+      try {
+        const attachmentManager = await app.container.make('jrmc.attachment')
+        const url = new URL(payload.coverImageUrl)
+        series.coverImage = (await attachmentManager.createFromUrl(
+          url,
+          'cover.jpg',
+        )) as NonNullable<Series['coverImage']>
+      } catch {
+        // ignore invalid URL or download failure
+      }
     }
 
     await series.save()
@@ -97,6 +108,17 @@ export default class SeriesController {
       series.coverImage = (await attachmentManager.createFromFile(coverFile)) as NonNullable<
         Series['coverImage']
       >
+    } else if (payload.coverImageUrl) {
+      try {
+        const attachmentManager = await app.container.make('jrmc.attachment')
+        const url = new URL(payload.coverImageUrl)
+        series.coverImage = (await attachmentManager.createFromUrl(
+          url,
+          'cover.jpg',
+        )) as NonNullable<Series['coverImage']>
+      } catch {
+        // ignore invalid URL or download failure
+      }
     }
 
     await series.save()

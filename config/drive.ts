@@ -24,7 +24,9 @@ const driveConfig = defineConfig({
       region: 'auto',
       bucket: env.get('R2_BUCKET') ?? '',
       endpoint: env.get('R2_ENDPOINT') ?? '',
-      visibility: 'public',
+      visibility: 'private',
+      /** R2 does not support object-level ACLs; use config visibility only */
+      supportsACL: false,
     }),
   },
 })

@@ -61,6 +61,16 @@ export default class NovelsController {
       novel.coverImage = (await attachmentManager.createFromFile(coverFile)) as NonNullable<
         Novel['coverImage']
       >
+    } else if (payload.coverImageUrl) {
+      try {
+        const attachmentManager = await app.container.make('jrmc.attachment')
+        const url = new URL(payload.coverImageUrl)
+        novel.coverImage = (await attachmentManager.createFromUrl(url, 'cover.jpg')) as NonNullable<
+          Novel['coverImage']
+        >
+      } catch {
+        // ignore invalid URL or download failure
+      }
     }
 
     await novel.save()
@@ -97,6 +107,16 @@ export default class NovelsController {
       novel.coverImage = (await attachmentManager.createFromFile(coverFile)) as NonNullable<
         Novel['coverImage']
       >
+    } else if (payload.coverImageUrl) {
+      try {
+        const attachmentManager = await app.container.make('jrmc.attachment')
+        const url = new URL(payload.coverImageUrl)
+        novel.coverImage = (await attachmentManager.createFromUrl(url, 'cover.jpg')) as NonNullable<
+          Novel['coverImage']
+        >
+      } catch {
+        // ignore invalid URL or download failure
+      }
     }
 
     await novel.save()

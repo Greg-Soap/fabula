@@ -1,7 +1,8 @@
 import { Head, Link, router, usePage } from '@inertiajs/react'
 import { Film, Pencil, Plus, Star, Trash2 } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/combination'
 import { DashboardLayout } from '@/components/dashboard/layout'
 import { PageHeader } from '@/components/dashboard/page_header'
 import { Button } from '@/components/ui/button'
@@ -25,13 +26,10 @@ function getCoverUrl(coverImage: SeriesItem['coverImage']): string | null {
   return (coverImage as { url?: string }).url ?? null
 }
 
-function handleDelete(id: string) {
-  if (!window.confirm('Delete this series? This cannot be undone.')) return
-  router.delete(`/dashboard/series/${id}`)
-}
-
 export default function DashboardSeriesIndex({ series }: DashboardSeriesIndexProps) {
   const flashSuccess = (usePage().props as { flashSuccess?: string }).flashSuccess
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+
   useEffect(() => {
     if (flashSuccess) toast.success(flashSuccess)
   }, [flashSuccess])
@@ -88,7 +86,7 @@ export default function DashboardSeriesIndex({ series }: DashboardSeriesIndexPro
                       <Button
                         variant='outline'
                         size='sm'
-                        onClick={() => handleDelete(item.id)}
+                        onClick={() => setDeleteId(item.id)}
                         className='text-destructive hover:text-destructive'>
                         <Trash2 className='h-4 w-4' />
                         Delete
@@ -100,6 +98,20 @@ export default function DashboardSeriesIndex({ series }: DashboardSeriesIndexPro
             )
           })}
         </div>
+
+        <ConfirmDialog
+          open={deleteId !== null}
+          onOpenChange={(open) => !open && setDeleteId(null)}
+          title='Delete this series?'
+          description='This cannot be undone.'
+          confirmLabel='Delete'
+          cancelLabel='Cancel'
+          variant='destructive'
+          onConfirm={() => {
+            if (deleteId) router.delete(`/dashboard/series/${deleteId}`)
+            setDeleteId(null)
+          }}
+        />
 
         {series.length === 0 && (
           <Card>

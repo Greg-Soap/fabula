@@ -7,6 +7,7 @@ export interface NovelFetchPayload {
   shortDescription?: string
   longDescription?: string
   externalLink?: string
+  coverImageUrl?: string
 }
 
 function fetchNovelInfo(query: string): Promise<NovelFetchPayload> {

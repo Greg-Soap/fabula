@@ -1,6 +1,6 @@
 import { column } from '@adonisjs/lucid/orm'
-import type { DateTime } from 'luxon'
 import { type Attachment, attachment } from '@jrmc/adonis-attachment'
+import type { DateTime } from 'luxon'
 import SuperBaseModel from './super_base.js'
 
 export default class Series extends SuperBaseModel {
@@ -21,7 +21,7 @@ export default class Series extends SuperBaseModel {
   @column()
   declare longDescription: string | null
 
-  @attachment({ preComputeUrl: true })
+  @attachment({ preComputeUrl: true, folder: 'series' })
   declare coverImage: Attachment | null
 
   @column()

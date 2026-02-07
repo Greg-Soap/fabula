@@ -9,6 +9,7 @@ export interface SeriesFetchPayload {
   rating?: number
   numberOfSeasons?: number
   trailerUrl?: string
+  coverImageUrl?: string
 }
 
 function fetchSeriesInfo(query: string): Promise<SeriesFetchPayload> {
