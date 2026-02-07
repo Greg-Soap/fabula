@@ -9,6 +9,9 @@
 |
 */
 
+import { mkdir } from 'node:fs/promises'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { Ignitor, prettyPrintError } from '@adonisjs/core'
 import 'reflect-metadata'
 
@@ -33,6 +36,10 @@ new Ignitor(APP_ROOT, { importer: IMPORTER })
   .tap((app) => {
     app.booting(async () => {
       await import('#start/env')
+      // Ensure tmp directory exists (SQLite db path, cache, etc.) – required on Railway and similar hosts
+      const appRoot = fileURLToPath(APP_ROOT)
+      const tmpDir = join(appRoot, 'tmp')
+      await mkdir(tmpDir, { recursive: true })
       await import('#extensions/model')
       await import('#extensions/email')
       await import('#extensions/http_request')

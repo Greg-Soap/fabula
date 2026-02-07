@@ -5,19 +5,16 @@ export default class extends BaseSchema {
 
   async up() {
     this.schema.createTable(this.tableName, (table) => {
-      table
-        .uuid('id')
-        .primary()
-        .defaultTo(this.db.rawQuery('(lower(hex(randomblob(16))))').knexQuery)
+      table.uuid('id').primary().defaultTo(this.raw('gen_random_uuid()'))
 
       table.string('title').notNullable()
       table.string('slug').notNullable().unique().index()
-      table.string('short_description').nullable()
+      table.text('short_description').nullable()
       table.text('long_description').nullable()
       table.json('cover_image').nullable()
       table.decimal('rating', 3, 2).nullable()
       table.text('personal_review').nullable()
-      table.string('trailer_url').nullable()
+      table.text('trailer_url').nullable()
       table.integer('number_of_seasons').nullable()
 
       table.timestamp('created_at').notNullable()

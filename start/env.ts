@@ -20,6 +20,13 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   /*
   |----------------------------------------------------------
+  | Database (PostgreSQL). Railway provides DATABASE_URL.
+  |----------------------------------------------------------
+  */
+  DATABASE_URL: Env.schema.string(),
+
+  /*
+  |----------------------------------------------------------
   | Variables for configuring session package
   |----------------------------------------------------------
   */
