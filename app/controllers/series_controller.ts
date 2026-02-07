@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import app from '@adonisjs/core/services/app'
 import Series from '#models/series'
+import { SeriesFetchService } from '#services/series_fetch_service'
 import { slugify } from '#utils/functions'
 import { createSeriesValidator, updateSeriesValidator } from '#validators/series'
 
@@ -109,5 +110,28 @@ export default class SeriesController {
     await series.delete()
     session.flash('success', 'Series deleted.')
     return response.redirect().back()
+  }
+
+  async fetchInfo({ request, response }: HttpContext) {
+    const query = request.input('query')
+    const trimmed = typeof query === 'string' ? query.trim() : ''
+    if (!trimmed) {
+      return response.badRequest({ message: 'Query is required' })
+    }
+
+    const service = new SeriesFetchService()
+    try {
+      const payload = await service.fetchByQuery(trimmed)
+      return response.ok(payload)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to fetch series info'
+      if (message === 'TMDB API key not configured') {
+        return response.serviceUnavailable({ message })
+      }
+      if (message === 'No series found') {
+        return response.notFound({ message })
+      }
+      return response.badRequest({ message })
+    }
   }
 }

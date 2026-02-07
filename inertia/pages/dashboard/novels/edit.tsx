@@ -1,10 +1,11 @@
 import { Head, Link, useForm } from '@inertiajs/react'
+import { useState } from 'react'
+import { FormCard, TextInput } from '@/components/combination'
 import { DashboardLayout } from '@/components/dashboard/layout'
 import { PageHeader } from '@/components/dashboard/page_header'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import { useFetchNovelInfo } from '@/hooks/use-fetch-novel-info'
 
 interface NovelEditProps {
   novel: {
@@ -20,6 +21,8 @@ interface NovelEditProps {
 }
 
 export default function DashboardNovelsEdit({ novel }: NovelEditProps) {
+  const [fetchQuery, setFetchQuery] = useState('')
+
   const form = useForm({
     title: novel.title,
     shortDescription: novel.shortDescription ?? '',
@@ -30,6 +33,23 @@ export default function DashboardNovelsEdit({ novel }: NovelEditProps) {
     numberOfChapters: novel.numberOfChapters ?? ('' as string | number),
     coverImage: null as File | null,
   })
+
+  const { mutate: fetchInfo, isPending: isFetching } = useFetchNovelInfo({
+    onSuccess: (data) => {
+      form.setData({
+        ...form.data,
+        ...(data.title != null && { title: data.title }),
+        ...(data.shortDescription != null && { shortDescription: data.shortDescription }),
+        ...(data.longDescription != null && { longDescription: data.longDescription }),
+        ...(data.externalLink != null && { externalLink: data.externalLink }),
+      })
+    },
+    successMessage: 'Novel info updated. Your personal review was kept.',
+  })
+
+  function handleFetchInfo() {
+    fetchInfo(fetchQuery)
+  }
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -42,98 +62,109 @@ export default function DashboardNovelsEdit({ novel }: NovelEditProps) {
       <div className='space-y-6'>
         <PageHeader title='Edit novel' description={novel.title} backHref='/dashboard/novels' />
 
+        <FormCard
+          className='max-w-2xl'
+          description='Fetch fresh metadata from Open Library without changing your personal review.'>
+          <div className='flex gap-2'>
+            <Input
+              placeholder='e.g. 1984'
+              value={fetchQuery}
+              onChange={(e) => setFetchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  handleFetchInfo()
+                }
+              }}
+              className='flex-1'
+            />
+            <Button type='button' onClick={handleFetchInfo} disabled={isFetching}>
+              {isFetching ? 'Fetching…' : 'Fetch info'}
+            </Button>
+          </div>
+        </FormCard>
+
         <form onSubmit={onSubmit} className='max-w-2xl space-y-6'>
-          <div className='space-y-2'>
-            <Label htmlFor='title'>Title *</Label>
-            <Input
-              id='title'
-              value={form.data.title}
-              onChange={(e) => form.setData('title', e.target.value)}
-              required
-            />
-            {form.errors.title && <p className='text-sm text-destructive'>{form.errors.title}</p>}
-          </div>
+          <TextInput
+            label='Title'
+            name='title'
+            value={form.data.title}
+            onChange={(e) => form.setData('title', e.target.value)}
+            error={form.errors.title}
+            required
+          />
 
-          <div className='space-y-2'>
-            <Label htmlFor='shortDescription'>Short description</Label>
-            <Input
-              id='shortDescription'
-              value={form.data.shortDescription}
-              onChange={(e) => form.setData('shortDescription', e.target.value)}
-            />
-          </div>
+          <TextInput
+            label='Short description'
+            name='shortDescription'
+            value={form.data.shortDescription}
+            onChange={(e) => form.setData('shortDescription', e.target.value)}
+            error={form.errors.shortDescription}
+          />
 
-          <div className='space-y-2'>
-            <Label htmlFor='longDescription'>Long description</Label>
-            <Textarea
-              id='longDescription'
-              value={form.data.longDescription}
-              onChange={(e) => form.setData('longDescription', e.target.value)}
-              rows={4}
-            />
-          </div>
+          <TextInput
+            label='Long description'
+            name='longDescription'
+            value={form.data.longDescription}
+            onChange={(e) => form.setData('longDescription', e.target.value)}
+            error={form.errors.longDescription}
+            rows={4}
+          />
 
-          <div className='space-y-2'>
-            <Label htmlFor='coverImage'>Cover image (leave empty to keep current)</Label>
-            <Input
-              id='coverImage'
-              type='file'
-              accept='image/*'
-              onChange={(e) => form.setData('coverImage', e.target.files?.[0] ?? null)}
-            />
-          </div>
+          <TextInput
+            label='Cover image (leave empty to keep current)'
+            name='coverImage'
+            onChange={(e) =>
+              form.setData('coverImage', (e.target as HTMLInputElement).files?.[0] ?? null)
+            }
+            type='file'
+            accept='image/*'
+          />
 
-          <div className='space-y-2'>
-            <Label htmlFor='rating'>Rating (0–10)</Label>
-            <Input
-              id='rating'
-              type='number'
-              min={0}
-              max={10}
-              step={0.5}
-              value={form.data.rating === '' ? '' : form.data.rating}
-              onChange={(e) =>
-                form.setData('rating', e.target.value === '' ? '' : Number(e.target.value))
-              }
-            />
-          </div>
+          <TextInput
+            label='Rating (0–10)'
+            name='rating'
+            value={form.data.rating === '' ? '' : form.data.rating}
+            onChange={(e) =>
+              form.setData('rating', e.target.value === '' ? '' : Number(e.target.value))
+            }
+            error={form.errors.rating}
+            type='number'
+            min={0}
+            max={10}
+            step={0.5}
+          />
 
-          <div className='space-y-2'>
-            <Label htmlFor='personalReview'>Personal review</Label>
-            <Textarea
-              id='personalReview'
-              value={form.data.personalReview}
-              onChange={(e) => form.setData('personalReview', e.target.value)}
-              rows={3}
-            />
-          </div>
+          <TextInput
+            label='Personal review'
+            name='personalReview'
+            value={form.data.personalReview}
+            onChange={(e) => form.setData('personalReview', e.target.value)}
+            error={form.errors.personalReview}
+            rows={3}
+          />
 
-          <div className='space-y-2'>
-            <Label htmlFor='externalLink'>External link (Amazon / Kindle / Novel Updates)</Label>
-            <Input
-              id='externalLink'
-              type='url'
-              value={form.data.externalLink}
-              onChange={(e) => form.setData('externalLink', e.target.value)}
-              placeholder='https://...'
-            />
-          </div>
+          <TextInput
+            label='External link (Amazon / Kindle / Novel Updates)'
+            name='externalLink'
+            value={form.data.externalLink}
+            onChange={(e) => form.setData('externalLink', e.target.value)}
+            error={form.errors.externalLink}
+            type='url'
+            placeholder='https://...'
+          />
 
-          <div className='space-y-2'>
-            <Label htmlFor='numberOfChapters'>Number of chapters</Label>
-            <Input
-              id='numberOfChapters'
-              type='number'
-              min={0}
-              value={form.data.numberOfChapters === '' ? '' : form.data.numberOfChapters}
-              onChange={(e) =>
-                form.setData(
-                  'numberOfChapters',
-                  e.target.value === '' ? '' : Number(e.target.value),
-                )
-              }
-            />
-          </div>
+          <TextInput
+            label='Number of chapters'
+            name='numberOfChapters'
+            value={form.data.numberOfChapters === '' ? '' : form.data.numberOfChapters}
+            onChange={(e) =>
+              form.setData('numberOfChapters', e.target.value === '' ? '' : Number(e.target.value))
+            }
+            error={form.errors.numberOfChapters}
+            type='number'
+            min={0}
+          />
 
           <div className='flex gap-4'>
             <Button type='submit' disabled={form.processing}>

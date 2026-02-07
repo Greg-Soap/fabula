@@ -2,14 +2,13 @@ import { Head, Link, router } from '@inertiajs/react'
 import { useMutation } from '@tanstack/react-query'
 import { useFormik } from 'formik'
 import { toast } from 'sonner'
+import { TextInput } from '@/components/combination'
 import { PublicLayout } from '@/components/layouts/public'
 import { Alert, AlertDescription } from '@/components/ui'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
-import { PasswordInput } from '@/components/ui/password_input'
-import { Input } from '@/components/ui/input'
 import { type ServerErrorResponse, serverErrorResponder } from '@/lib/error'
 import api from '@/lib/http'
 
@@ -65,26 +64,25 @@ export default function Login({ errors }: LoginProps) {
               </Alert>
             )}
             <form onSubmit={formik.handleSubmit} className='space-y-4'>
-              <div className='space-y-2'>
-                <Label htmlFor='email'>Email</Label>
-                <Input
-                  id='email'
-                  type='email'
-                  {...formik.getFieldProps('email')}
-                  required
-                  placeholder='you@example.com'
-                />
-              </div>
+              <TextInput
+                label='Email'
+                name='email'
+                type='email'
+                {...formik.getFieldProps('email')}
+                required
+                placeholder='you@example.com'
+                error={formik.errors.email}
+              />
 
-              <div className='space-y-2'>
-                <Label htmlFor='password'>Password</Label>
-                <PasswordInput
-                  id='password'
-                  {...formik.getFieldProps('password')}
-                  required
-                  placeholder='••••••••'
-                />
-              </div>
+              <TextInput
+                label='Password'
+                name='password'
+                type='password'
+                {...formik.getFieldProps('password')}
+                required
+                placeholder='••••••••'
+                error={formik.errors.password}
+              />
 
               <div className='flex items-center space-x-2'>
                 <Checkbox

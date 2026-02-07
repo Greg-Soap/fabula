@@ -1,14 +1,8 @@
 import type { SharedProps } from '@adonisjs/inertia/types'
 import { Link, router, usePage } from '@inertiajs/react'
 import { ArrowRight, Menu } from 'lucide-react'
+import { FabulaDropdown } from '@/components/combination'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { cn } from '@/lib/utils'
 
@@ -59,26 +53,22 @@ function PublicNavbarActions({ extraActions }: { extraActions?: React.ReactNode 
 
       {/* Mobile menu */}
       <div className='md:hidden'>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+        <FabulaDropdown
+          trigger={
             <Button variant='ghost' size='icon' aria-label='Open menu'>
               <Menu className='h-5 w-5' />
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end'>
-            <DropdownMenuItem onClick={() => router.visit('/')}>Home</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.visit('/series')}>Series</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.visit('/novels')}>Novels</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {isLoggedIn ? (
-              <DropdownMenuItem onClick={() => router.visit('/dashboard')}>
-                Dashboard
-              </DropdownMenuItem>
-            ) : (
-              <DropdownMenuItem onClick={() => router.visit('/login')}>Sign In</DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+          }
+          items={[
+            { label: 'Home', onClick: () => router.visit('/') },
+            { label: 'Series', onClick: () => router.visit('/series') },
+            { label: 'Novels', onClick: () => router.visit('/novels') },
+            ...(isLoggedIn
+              ? [{ label: 'Dashboard', onClick: () => router.visit('/dashboard') }]
+              : [{ label: 'Sign In', onClick: () => router.visit('/login') }]),
+          ]}
+          align='end'
+        />
       </div>
     </div>
   )

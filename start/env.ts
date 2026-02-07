@@ -42,7 +42,19 @@ export default await Env.create(new URL('../', import.meta.url), {
   | Variables for configuring the drive package
   |----------------------------------------------------------
   */
-  DRIVE_DISK: Env.schema.enum(['fs'] as const),
+  DRIVE_DISK: Env.schema.enum(['fs', 'r2'] as const),
+
+  /*
+  |----------------------------------------------------------
+  | Cloudflare R2 (only required when DRIVE_DISK=r2)
+  | Create API token in Cloudflare Dashboard → R2 → Manage R2 API Tokens
+  | Endpoint: https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+  |----------------------------------------------------------
+  */
+  R2_ACCESS_KEY_ID: Env.schema.string.optional(),
+  R2_SECRET_ACCESS_KEY: Env.schema.string.optional(),
+  R2_BUCKET: Env.schema.string.optional(),
+  R2_ENDPOINT: Env.schema.string.optional(),
 
   /*
   |----------------------------------------------------------
@@ -58,4 +70,11 @@ export default await Env.create(new URL('../', import.meta.url), {
   */
   GOOGLE_CLIENT_ID: Env.schema.string.optional(),
   GOOGLE_CLIENT_SECRET: Env.schema.string.optional(),
+
+  /*
+  |----------------------------------------------------------
+  | TMDB API (for series fetch-info; get key at themoviedb.org)
+  |----------------------------------------------------------
+  */
+  TMDB_API_KEY: Env.schema.string.optional(),
 })

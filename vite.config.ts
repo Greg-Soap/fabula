@@ -17,7 +17,7 @@ export default defineConfig({
     }),
   ],
   server: {
-    allowedHosts: ['fabula-u1jl.onrender.com'],
+    allowedHosts: true,
   },
   resolve: {
     alias: {

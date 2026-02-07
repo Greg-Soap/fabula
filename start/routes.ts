@@ -44,6 +44,9 @@ router
       .get('/dashboard/series/create', [SeriesController, 'create'])
       .as('dashboard.series.create')
     router.post('/dashboard/series', [SeriesController, 'store']).as('dashboard.series.store')
+    router
+      .post('/dashboard/series/fetch-info', [SeriesController, 'fetchInfo'])
+      .as('dashboard.series.fetchInfo')
     router.get('/dashboard/series/:id/edit', [SeriesController, 'edit']).as('dashboard.series.edit')
     router.put('/dashboard/series/:id', [SeriesController, 'update']).as('dashboard.series.update')
     router
@@ -57,6 +60,9 @@ router
       .get('/dashboard/novels/create', [NovelsController, 'create'])
       .as('dashboard.novels.create')
     router.post('/dashboard/novels', [NovelsController, 'store']).as('dashboard.novels.store')
+    router
+      .post('/dashboard/novels/fetch-info', [NovelsController, 'fetchInfo'])
+      .as('dashboard.novels.fetchInfo')
     router.get('/dashboard/novels/:id/edit', [NovelsController, 'edit']).as('dashboard.novels.edit')
     router.put('/dashboard/novels/:id', [NovelsController, 'update']).as('dashboard.novels.update')
     router

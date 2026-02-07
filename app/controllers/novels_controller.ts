@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import app from '@adonisjs/core/services/app'
 import Novel from '#models/novel'
+import { NovelsFetchService } from '#services/novels_fetch_service'
 import { slugify } from '#utils/functions'
 import { createNovelValidator, updateNovelValidator } from '#validators/novel'
 
@@ -109,5 +110,25 @@ export default class NovelsController {
     await novel.delete()
     session.flash('success', 'Novel deleted.')
     return response.redirect().back()
+  }
+
+  async fetchInfo({ request, response }: HttpContext) {
+    const query = request.input('query')
+    const trimmed = typeof query === 'string' ? query.trim() : ''
+    if (!trimmed) {
+      return response.badRequest({ message: 'Query is required' })
+    }
+
+    const service = new NovelsFetchService()
+    try {
+      const payload = await service.fetchByQuery(trimmed)
+      return response.ok(payload)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to fetch novel info'
+      if (message === 'No novel found') {
+        return response.notFound({ message })
+      }
+      return response.badRequest({ message })
+    }
   }
 }
