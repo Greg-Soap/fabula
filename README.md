@@ -1,272 +1,137 @@
-# AdonisJS Starter Template
+# Fabula
 
-A modern, full-stack starter template built with AdonisJS and Inertia.js, featuring React, TypeScript, and Tailwind CSS.
+A shared catalog of series and novels — discover, rate, and share what you love.
 
-## 🚀 What's Included
+Built with **AdonisJS 6**, **Inertia.js**, **React**, and **TypeScript**.
 
-This starter template provides a solid foundation for building modern web applications with the following features:
+## Features
 
-### Backend (AdonisJS)
+- **Public catalog** – Browse series and novels; view details and covers
+- **Dashboard** – Authenticated CRUD for series and novels
+- **Auto-fill** – Fetch metadata from TMDB (series) and Open Library (novels); cover from URL or file upload
+- **Cover storage** – Local filesystem or **Cloudflare R2** (private bucket, signed URLs)
+- **Auth** – Email/password login; optional Google OAuth
+- **Session-based** – CSRF protection, remember me, rate limiting
 
-- **Framework**: AdonisJS v6 - A Node.js MVC framework with TypeScript support
-- **Database**: Lucid ORM with SQLite (better-sqlite3) - Easily switchable to PostgreSQL, MySQL, etc.
-- **Authentication**: Complete authentication system with:
-  - User registration
-  - Login/logout
-  - Password reset functionality
-  - Session-based authentication
-  - Password reset tokens
-- **Email**: Mail service configured with React Email templates
-- **Validation**: VineJS for request validation
-- **Security**: Shield middleware for CSRF protection
-- **Static Assets**: Static file serving configured
+## Stack
 
-### Frontend (React + Inertia.js)
+| Layer      | Tech |
+|-----------|------|
+| Backend   | AdonisJS v6, Lucid ORM, VineJS |
+| Database  | PostgreSQL only |
+| Frontend  | React 19, Inertia.js, TypeScript, Vite 6 |
+| Styling   | Tailwind CSS |
+| Storage   | Local disk or Cloudflare R2 (covers) |
 
-- **Framework**: React 19 with TypeScript
-- **SPA Experience**: Inertia.js for seamless single-page app experience without API complexity
-- **Server-Side Rendering**: SSR enabled for better SEO and initial load performance
-- **Styling**: Tailwind CSS with custom configuration
-- **UI Components**: shadcn/ui components built on Radix UI primitives
-- **Icons**: Lucide React icon library
-- **Build Tool**: Vite 6 for fast development and optimized production builds
+## Prerequisites
 
+- **Node.js** 22+
+- **npm** 10+
+- **PostgreSQL** (local or hosted, e.g. Railway)
 
-## 📁 Project Structure
+## Setup
 
-```
-starter-template/
-├── app/
-│   ├── controllers/        # HTTP request handlers
-│   │   ├── auth_controller.ts
-│   │   └── users_controller.ts
-│   ├── middleware/         # HTTP middleware
-│   │   ├── auth_middleware.ts
-│   │   ├── guest_middleware.ts
-│   │   └── silent_auth_middleware.ts
-│   ├── models/             # Database models
-│   │   ├── user.ts
-│   │   └── password_reset.ts
-│   ├── services/           # Business logic services
-│   │   └── email_service.ts
-│   ├── utils/              # Utility functions
-│   └── validators/         # Request validators
-│       └── auth.ts
-├── config/                 # Configuration files
-│   ├── auth.ts
-│   ├── database.ts
-│   ├── inertia.ts
-│   └── ...
-├── database/
-│   └── migrations/         # Database migrations
-│       ├── create_users_table.ts
-│       ├── create_auth_access_tokens_table.ts
-│       └── create_password_resets_table.ts
-├── inertia/
-│   ├── app/                # Inertia app setup
-│   │   ├── app.tsx         # Client-side entry
-│   │   └── ssr.tsx        # Server-side rendering
-│   ├── pages/              # React page components
-│   │   └── home.tsx
-│   ├── emails/             # React Email templates
-│   └── css/                # Global styles
-├── resources/
-│   ├── js/                 # Additional JavaScript/TypeScript
-│   ├── css/                # CSS files
-│   └── views/              # Edge templates
-│       └── inertia_layout.edge
-├── start/
-│   ├── routes.ts           # Application routes
-│   ├── kernel.ts          # Middleware configuration
-│   ├── health.ts          # Health check configuration
-│   └── env.ts             # Environment variable validation
-└── tests/                  # Test files
-    ├── bootstrap.ts        # Test configuration
-    ├── functional/         # Functional/integration tests
-    │   ├── auth.spec.ts   # Authentication tests
-    │   └── health.spec.ts # Health check tests
-    └── unit/              # Unit tests
-        └── user.spec.ts   # User model tests
+1. **Clone and install**
+   ```bash
+   git clone <repo-url> fabula && cd fabula
+   npm install
+   ```
+
+2. **Environment**
+   ```bash
+   cp .env.example .env
+   node ace generate:key
+   ```
+   Edit `.env` and set at least:
+   - `APP_KEY` (after generate:key)
+   - `DATABASE_URL` – e.g. `postgresql://user:password@localhost:5432/fabula`
+
+3. **Database**
+   ```bash
+   node ace migration:run
+   ```
+   Optional: seed a user
+   ```bash
+   node ace db:seed
+   ```
+
+4. **Run**
+   ```bash
+   npm run dev
+   ```
+   App: `http://localhost:3333`
+
+### Optional env
+
+- **R2 (covers)** – Set `DRIVE_DISK=r2` and add `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_ENDPOINT` (see `.env.example`).
+- **TMDB** – For series auto-fill: get a key at [themoviedb.org](https://www.themoviedb.org/) and set `TMDB_API_KEY`.
+- **Google OAuth** – Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` and configure redirect URI (e.g. `http://localhost:3333/google/callback`).
+
+## Migrating from SQLite
+
+If you have an existing SQLite database at `tmp/db.sqlite3`:
+
+1. Ensure Postgres migrations are up to date: `node ace migration:run`
+2. Copy data into Postgres:
+   ```bash
+   node ace migrate:from_sqlite
+   ```
+   To replace existing Postgres data and re-import:
+   ```bash
+   node ace migrate:from_sqlite --truncate
+   ```
+
+## Project structure (main)
 
 ```
-
-## 🛠️ Getting Started
-
-### Prerequisites
-
-- Node.js 22+ 
-- npm 10+
-
-### Quick Setup (Recommended)
-
-The easiest way to get started is using the provided setup script:
-
-**On macOS/Linux:**
-```bash
-# Make the script executable (if needed)
-chmod +x setup.sh
-
-# Run the setup script
-./setup.sh
+app/
+  controllers/     # auth, dashboard, series, novels
+  models/          # User, Series, Novel
+  validators/      # VineJS validators
+  utils/           # e.g. downloadImageToBuffer
+config/
+  database.ts      # Postgres (DATABASE_URL)
+  drive.ts         # fs or R2 disk
+database/
+  migrations/      # users, series, novels, auth, etc.
+  seeders/
+inertia/
+  app/             # React app + SSR entry
+  pages/           # home, login, dashboard, series, novels
+  components/     # shared + dashboard components
+commands/
+  migrate_from_sqlite.ts   # SQLite → Postgres copy
+start/
+  routes.ts
+  env.ts           # env validation
 ```
 
-After running the setup script, start the development server:
-```bash
-npm run dev
-```
+## Scripts
 
-The application will be available at `http://localhost:3333`
+| Command | Description |
+|--------|-------------|
+| `npm run dev` | Start dev server (HMR) |
+| `npm run build` | Production build |
+| `npm start` | Run production server |
+| `npm test` | Run tests |
+| `node ace migration:run` | Run migrations |
+| `node ace migrate:from_sqlite [--truncate]` | Copy SQLite → Postgres |
 
-### Manual Installation
+## Deployment
 
-If you prefer to set up manually:
+1. Set `NODE_ENV=production`, `HOST=0.0.0.0`, and a production `DATABASE_URL`.
+2. Run `npm run build` then `node ace migration:run`.
+3. Start with `npm start` (or your process manager).
 
-1. Install dependencies:
-```bash
-npm install
-```
+Ensure the app can create a `tmp` directory at runtime (e.g. for SQLite migration or temp files).
 
-2. Set up environment variables:
-```bash
-cp .env.example .env
-```
+## Google OAuth2
 
-3. Generate the application key:
-```bash
-node ace generate:key
-```
+1. In [Google Cloud Console](https://console.cloud.google.com/): create a project, **API & Services** → **Credentials** → **OAuth consent screen** (add scopes if needed).
+2. Create **OAuth 2.0 Client ID** (e.g. Web application), copy Client ID and Secret to `.env`.
+3. Set redirect URI to `http://localhost:3333/google/callback` (or your production URL).
+4. In production, set production callback URL and credentials and publish the app in the audience tab.
 
-4. Run database migrations:
-```bash
-node ace migration:run
-```
-
-5. (Optional) Seed the database with sample users:
-```bash
-node ace db:seed
-```
-
-6. Start the development server:
-```bash
-npm run dev
-``` 
-
-
-### Features
-
-- **User Registration** - Sign up with email and password
-- **Login/Logout** - Session-based authentication with remember me support
-- **Password Reset** - Forgot password flow with email tokens
-- **Session Management** - Secure session handling with CSRF protection
-- **Password Security** - Automatic password hashing using scrypt
-
-### Authentication Details
-
-- **Session-based authentication** using AdonisJS session guards
-- **Password hashing** handled automatically via Lucid ORM hooks
-- **CSRF protection** enabled for all POST/PUT/PATCH/DELETE requests
-- **Remember me tokens** supported for persistent sessions
-- **Password reset tokens** expire after 1 hour
-
-All authentication endpoints are prefixed with `/api/v1/auth`. See the API documentation at `/docs` for detailed endpoint specifications.
-
-
-
-## 📧 Email Templates
-
-Email templates are built with React Email and located in `inertia/emails/`. The email service is configured in `app/services/email_service.ts`.
-
-## 🗄️ Database
-
-The project uses SQLite by default (configured in `config/database.ts`). To switch to another database:
-
-1. Install the appropriate driver (e.g., `pg` for PostgreSQL)
-2. Update `config/database.ts` with your connection details
-3. Update `.env` with your database credentials
-
-## 🧪 Testing
-
-This project includes comprehensive test coverage using Japa test runner with AdonisJS testing utilities.
-
-### Test Suites
-
-Tests are organized into two suites:
-
-- **Unit tests** (`tests/unit/`) - Fast, isolated tests for individual components
-  - User model tests (password hashing, credential verification)
-  - Utility function tests
-  
-- **Functional tests** (`tests/functional/`) - Integration tests with HTTP requests
-  - Authentication endpoints (signup, login, logout, password reset)
-  - Health check endpoints
-  - Full request/response cycle testing
-
-### Running Tests
-
-Run all tests:
-```bash
-npm test
-```
-
-
-## 📚 API Documentation
-
-The project includes automatic API documentation using Swagger:
-- **API Docs UI**: `GET /docs` - Interactive API documentation (RapiDoc)
-
-The Swagger configuration is in `config/swagger.ts`. API documentation is automatically generated from your routes and can be customized with additional metadata.
-
-## 🔧 Configuration
-
-Key configuration files:
-- `config/auth.ts` - Authentication settings
-- `config/database.ts` - Database connections
-- `config/inertia.ts` - Inertia.js settings
-- `config/mail.ts` - Email configuration
-- `config/shield.ts` - Security middleware (CSRF, CSP, etc.)
-- `config/session.ts` - Session configuration
-- `adonisrc.ts` - AdonisJS application configuration
-- `.env.test` - Test environment variables
-
-
-## 🚀 Deployment
-
-1. Build the application:
-```bash
-npm run build
-```
-
-2. Set production environment variables
-
-3. Run migrations:
-```bash
-node ace migration:run
-```
-
-4. Start the server:
-```bash
-npm start
-```
-
-## 📄 License
+## License
 
 UNLICENSED
-
-## 📄 Google OAuth2 Setup
-[YouTube Video](https://www.youtube.com/shorts/WABhO9KsOpU)
-
-To setup Google OAuth2, you need to:
-
-1. Go to the [Google Cloud Console](https://console.cloud.google.com/)  
-2. Create or have a new project in the Google Cloud Console
-2. Open the side bar and select "API & Services"
-4. Select Credentials and then OAuth Consent Screen
-5. Click data acess in the sidebar, click add or remove scopes and then select the first 2 scopes
-6. Create a new client ID and client secret and copy the client ID and client secret to the `.env` file
-7. Set the redirect URI to `http://localhost:3333/google/callback`. This should match the callback URL in the `.env` and ally.ts file file
-8. In production, don't forget to set the callback URL to the production URL and the client ID and client secret to the production values and publish the app in the audience tab.
-
-
-
-
-
