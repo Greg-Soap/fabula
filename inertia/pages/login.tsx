@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react'
+import { Head, router } from '@inertiajs/react'
 import { useMutation } from '@tanstack/react-query'
 import { useFormik } from 'formik'
 import { toast } from 'sonner'
@@ -41,7 +41,7 @@ export default function Login({ errors }: LoginProps) {
 
   const formik = useFormik<LoginValues>({
     initialValues: {
-      email: 'admin@test.com',
+      email: 'admin@fabula.local',
       password: 'password',
       remember: false,
     },
@@ -103,26 +103,6 @@ export default function Login({ errors }: LoginProps) {
                   loadingText='Logging in…'>
                   Login
                 </Button>
-
-                <a href='/google/redirect' target='_blank' rel='noopener'>
-                  <Button type='button' disabled={isPending} className='w-full bg-black'>
-                    <img src='/icons/google-icon.svg' alt='Google' className='w-4 h-4' />
-                    Login with Google
-                  </Button>
-                </a>
-
-                <Link
-                  href='/forgot-password'
-                  className='text-sm text-primary hover:underline text-center'>
-                  Forgot password?
-                </Link>
-              </div>
-
-              <div className='text-center text-sm text-muted-foreground'>
-                Don't have an account?{' '}
-                <Link href='/signup' className='text-primary hover:underline'>
-                  Sign up
-                </Link>
               </div>
             </form>
           </CardContent>
