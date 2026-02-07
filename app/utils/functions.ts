@@ -175,6 +175,21 @@ export function generateOTP(length = 6): string {
 }
 
 /**
+ * Download an image from a URL (follows redirects). Returns Buffer or null on failure.
+ * Use this instead of attachment createFromUrl when the URL may redirect (e.g. Open Library, TMDB).
+ */
+export async function downloadImageToBuffer(url: string): Promise<Buffer | null> {
+  try {
+    const response = await fetch(url, { redirect: 'follow' })
+    if (!response.ok) return null
+    const arrayBuffer = await response.arrayBuffer()
+    return Buffer.from(arrayBuffer)
+  } catch {
+    return null
+  }
+}
+
+/**
  * Slugify a string for URL-safe slugs: lowercase, replace spaces/special chars with hyphens, trim.
  */
 export function slugify(str: string): string {

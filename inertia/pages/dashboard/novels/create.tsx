@@ -102,7 +102,7 @@ export default function DashboardNovelsCreate() {
               value={form.data.longDescription}
               onChange={(e) => form.setData('longDescription', e.target.value)}
               error={form.errors.longDescription}
-              rows={4}
+              rows={8}
             />
 
             <TextInput

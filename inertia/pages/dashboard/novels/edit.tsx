@@ -113,7 +113,7 @@ export default function DashboardNovelsEdit({ novel }: NovelEditProps) {
               value={form.data.longDescription}
               onChange={(e) => form.setData('longDescription', e.target.value)}
               error={form.errors.longDescription}
-              rows={4}
+              rows={8}
             />
 
             <TextInput

@@ -2,7 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import app from '@adonisjs/core/services/app'
 import Novel from '#models/novel'
 import { NovelsFetchService } from '#services/novels_fetch_service'
-import { slugify } from '#utils/functions'
+import { downloadImageToBuffer, slugify } from '#utils/functions'
 import { createNovelValidator, updateNovelValidator } from '#validators/novel'
 
 function ensureUniqueSlug(baseSlug: string, excludeId?: string): Promise<string> {
@@ -62,14 +62,13 @@ export default class NovelsController {
         Novel['coverImage']
       >
     } else if (payload.coverImageUrl) {
-      try {
+      const buffer = await downloadImageToBuffer(payload.coverImageUrl)
+      if (buffer) {
         const attachmentManager = await app.container.make('jrmc.attachment')
-        const url = new URL(payload.coverImageUrl)
-        novel.coverImage = (await attachmentManager.createFromUrl(url, 'cover.jpg')) as NonNullable<
-          Novel['coverImage']
-        >
-      } catch {
-        // ignore invalid URL or download failure
+        novel.coverImage = (await attachmentManager.createFromBuffer(
+          buffer,
+          'cover.jpg',
+        )) as NonNullable<Novel['coverImage']>
       }
     }
 
@@ -108,14 +107,13 @@ export default class NovelsController {
         Novel['coverImage']
       >
     } else if (payload.coverImageUrl) {
-      try {
+      const buffer = await downloadImageToBuffer(payload.coverImageUrl)
+      if (buffer) {
         const attachmentManager = await app.container.make('jrmc.attachment')
-        const url = new URL(payload.coverImageUrl)
-        novel.coverImage = (await attachmentManager.createFromUrl(url, 'cover.jpg')) as NonNullable<
-          Novel['coverImage']
-        >
-      } catch {
-        // ignore invalid URL or download failure
+        novel.coverImage = (await attachmentManager.createFromBuffer(
+          buffer,
+          'cover.jpg',
+        )) as NonNullable<Novel['coverImage']>
       }
     }
 

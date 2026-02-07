@@ -2,7 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import app from '@adonisjs/core/services/app'
 import Series from '#models/series'
 import { SeriesFetchService } from '#services/series_fetch_service'
-import { slugify } from '#utils/functions'
+import { downloadImageToBuffer, slugify } from '#utils/functions'
 import { createSeriesValidator, updateSeriesValidator } from '#validators/series'
 
 function ensureUniqueSlug(baseSlug: string, excludeId?: string): Promise<string> {
@@ -62,15 +62,13 @@ export default class SeriesController {
         Series['coverImage']
       >
     } else if (payload.coverImageUrl) {
-      try {
+      const buffer = await downloadImageToBuffer(payload.coverImageUrl)
+      if (buffer) {
         const attachmentManager = await app.container.make('jrmc.attachment')
-        const url = new URL(payload.coverImageUrl)
-        series.coverImage = (await attachmentManager.createFromUrl(
-          url,
+        series.coverImage = (await attachmentManager.createFromBuffer(
+          buffer,
           'cover.jpg',
         )) as NonNullable<Series['coverImage']>
-      } catch {
-        // ignore invalid URL or download failure
       }
     }
 
@@ -109,15 +107,13 @@ export default class SeriesController {
         Series['coverImage']
       >
     } else if (payload.coverImageUrl) {
-      try {
+      const buffer = await downloadImageToBuffer(payload.coverImageUrl)
+      if (buffer) {
         const attachmentManager = await app.container.make('jrmc.attachment')
-        const url = new URL(payload.coverImageUrl)
-        series.coverImage = (await attachmentManager.createFromUrl(
-          url,
+        series.coverImage = (await attachmentManager.createFromBuffer(
+          buffer,
           'cover.jpg',
         )) as NonNullable<Series['coverImage']>
-      } catch {
-        // ignore invalid URL or download failure
       }
     }
 
