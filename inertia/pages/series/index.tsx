@@ -122,9 +122,9 @@ export default function SeriesIndex({
         </p>
 
         <div
-          className='mt-8 flex flex-wrap items-center gap-3 opacity-0 animate-fabula-fade-in-up-subtle'
+          className='mt-8 flex flex-col gap-3 opacity-0 animate-fabula-fade-in-up-subtle sm:flex-row sm:items-center sm:gap-3'
           style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
-          <form method='get' action='/series' className='flex flex-1 min-w-0 max-w-md'>
+          <form method='get' action='/series' className='w-full sm:flex-1 sm:min-w-0 sm:max-w-md'>
             <input type='hidden' name='sort' value={sort} />
             {ratedOnly && <input type='hidden' name='rated_only' value='1' />}
             {genre && <input type='hidden' name='genre' value={genre} />}
@@ -211,7 +211,7 @@ export default function SeriesIndex({
               </Button>
             </div>
           </FabulaSheet>
-          <div className='flex shrink-0 gap-1'>
+          <div className='flex flex-wrap items-center gap-1 sm:shrink-0'>
             <Button
               variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
               size='icon'
