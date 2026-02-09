@@ -26,7 +26,9 @@ function escapeLikePattern(value: string): string {
 export default class SeriesController {
   async index({ inertia, request }: HttpContext) {
     const searchQuery = (request.input('q') ?? '').trim()
-    const query = Series.query().orderBy('title', 'asc')
+    const sort = (request.input('sort') ?? 'name_asc') as string
+    const ratedOnly = request.input('rated_only') === '1' || request.input('rated_only') === true
+    const query = Series.query()
 
     if (searchQuery) {
       const pattern = `%${escapeLikePattern(searchQuery)}%`
@@ -37,17 +39,56 @@ export default class SeriesController {
       })
     }
 
+    if (ratedOnly) {
+      query.whereNotNull('rating')
+    }
+
+    switch (sort) {
+      case 'name_desc':
+        query.orderBy('title', 'desc')
+        break
+      case 'date_desc':
+        query.orderBy('created_at', 'desc')
+        break
+      case 'rating_desc':
+        query.orderByRaw('rating DESC NULLS LAST')
+        break
+      default:
+        query.orderBy('title', 'asc')
+    }
+
     const series = await query
     return inertia.render('series/index', {
       series: series.map((s) => s.serialize()),
       searchQuery,
+      sort:
+        sort === 'name_desc' || sort === 'date_desc' || sort === 'rating_desc' ? sort : 'name_asc',
+      ratedOnly,
     })
   }
 
-  async show({ params, inertia, response }: HttpContext) {
+  async show({ params, inertia, request, response }: HttpContext) {
     const series = await Series.findBy('slug', params.slug)
     if (!series) return response.notFound()
-    return inertia.render('series/show', { series: series.serialize() })
+    const baseUrl = `${request.protocol()}://${request.host()}`
+    const canonicalUrl = request.completeUrl()
+    const serialized = series.serialize() as { coverImage?: { url?: string } | null }
+    const coverUrl = serialized.coverImage?.url
+    const ogImageUrl =
+      coverUrl && !coverUrl.startsWith('http')
+        ? `${baseUrl}${coverUrl.startsWith('/') ? '' : '/'}${coverUrl}`
+        : (coverUrl ?? null)
+    const description =
+      (series.shortDescription ?? series.longDescription ?? '').slice(0, 160) || undefined
+    return inertia.render('series/show', {
+      series: serialized,
+      seo: {
+        canonicalUrl,
+        ogImageUrl: ogImageUrl ?? undefined,
+        description,
+        title: series.title,
+      },
+    })
   }
 
   async dashboardIndex({ inertia }: HttpContext) {
@@ -61,6 +102,19 @@ export default class SeriesController {
 
   async store({ request, response, session }: HttpContext) {
     const payload = await request.validateUsing(createSeriesValidator)
+    const normalizedTitle = payload.title.trim().toLowerCase()
+    const existing = await Series.query()
+      .whereRaw('LOWER(TRIM(title)) = ?', [normalizedTitle])
+      .first()
+    if (existing) {
+      session.flash('warning', {
+        type: 'already_in_catalog',
+        catalog: 'series',
+        existingSlug: existing.slug,
+        existingTitle: existing.title,
+      })
+    }
+
     const baseSlug = slugify(payload.title) || 'series'
     const slug = await ensureUniqueSlug(baseSlug)
 

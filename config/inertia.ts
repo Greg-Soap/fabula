@@ -18,6 +18,7 @@ const inertiaConfig = defineConfig({
     params: (ctx) => ctx.request.params(),
     errors: (ctx) => ctx.session?.flashMessages.get('errors'),
     flashSuccess: (ctx) => ctx.session?.flashMessages.get('success'),
+    flashWarning: (ctx) => ctx.session?.flashMessages.get('warning'),
     qs: async (ctx) => ({
       ...ctx.request.qs(),
       ...(app.inTest ? {} : await ctx.request?.paginationQs()),

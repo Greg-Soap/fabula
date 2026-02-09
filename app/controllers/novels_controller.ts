@@ -25,10 +25,28 @@ export default class NovelsController {
     return inertia.render('novels/index', { novels: novels.map((n) => n.serialize()) })
   }
 
-  async show({ params, inertia, response }: HttpContext) {
+  async show({ params, inertia, request, response }: HttpContext) {
     const novel = await Novel.findBy('slug', params.slug)
     if (!novel) return response.notFound()
-    return inertia.render('novels/show', { novel: novel.serialize() })
+    const baseUrl = `${request.protocol()}://${request.host()}`
+    const canonicalUrl = request.completeUrl()
+    const serialized = novel.serialize() as { coverImage?: { url?: string } | null }
+    const coverUrl = serialized.coverImage?.url
+    const ogImageUrl =
+      coverUrl && !coverUrl.startsWith('http')
+        ? `${baseUrl}${coverUrl.startsWith('/') ? '' : '/'}${coverUrl}`
+        : (coverUrl ?? null)
+    const description =
+      (novel.shortDescription ?? novel.longDescription ?? '').slice(0, 160) || undefined
+    return inertia.render('novels/show', {
+      novel: serialized,
+      seo: {
+        canonicalUrl,
+        ogImageUrl: ogImageUrl ?? undefined,
+        description,
+        title: novel.title,
+      },
+    })
   }
 
   async dashboardIndex({ inertia }: HttpContext) {
@@ -42,6 +60,19 @@ export default class NovelsController {
 
   async store({ request, response, session }: HttpContext) {
     const payload = await request.validateUsing(createNovelValidator)
+    const normalizedTitle = payload.title.trim().toLowerCase()
+    const existing = await Novel.query()
+      .whereRaw('LOWER(TRIM(title)) = ?', [normalizedTitle])
+      .first()
+    if (existing) {
+      session.flash('warning', {
+        type: 'already_in_catalog',
+        catalog: 'novels',
+        existingSlug: existing.slug,
+        existingTitle: existing.title,
+      })
+    }
+
     const baseSlug = slugify(payload.title) || 'novel'
     const slug = await ensureUniqueSlug(baseSlug)
 

@@ -54,7 +54,12 @@ export default function NovelsIndex({ novels }: NovelsIndexProps) {
                 <Card className='h-full overflow-hidden transition-shadow hover:shadow-md'>
                   <div className='aspect-[2/3] w-full bg-muted'>
                     {coverUrl ? (
-                      <img src={coverUrl} alt={item.title} className='h-full w-full object-cover' />
+                      <img
+                        src={coverUrl}
+                        alt={item.title}
+                        className='h-full w-full object-cover'
+                        loading='lazy'
+                      />
                     ) : (
                       <div className='flex h-full w-full items-center justify-center'>
                         <BookOpen className='h-16 w-16 text-muted-foreground/50' />

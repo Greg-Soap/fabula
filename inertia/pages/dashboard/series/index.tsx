@@ -26,13 +26,33 @@ function getCoverUrl(coverImage: SeriesItem['coverImage']): string | null {
   return (coverImage as { url?: string }).url ?? null
 }
 
+interface FlashWarningAlreadyInCatalog {
+  type: 'already_in_catalog'
+  catalog: string
+  existingSlug: string
+  existingTitle: string
+}
+
 export default function DashboardSeriesIndex({ series }: DashboardSeriesIndexProps) {
-  const flashSuccess = (usePage().props as { flashSuccess?: string }).flashSuccess
+  const pageProps = usePage().props as {
+    flashSuccess?: string
+    flashWarning?: FlashWarningAlreadyInCatalog
+  }
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
   useEffect(() => {
-    if (flashSuccess) toast.success(flashSuccess)
-  }, [flashSuccess])
+    if (pageProps.flashSuccess) toast.success(pageProps.flashSuccess)
+  }, [pageProps.flashSuccess])
+
+  useEffect(() => {
+    const w = pageProps.flashWarning
+    if (w?.type === 'already_in_catalog' && w.existingSlug) {
+      const href = `/${w.catalog}/${w.existingSlug}`
+      toast.warning(`"${w.existingTitle}" may already be in your catalog.`, {
+        action: { label: 'View existing', onClick: () => router.visit(href) },
+      })
+    }
+  }, [pageProps.flashWarning])
 
   return (
     <DashboardLayout>
@@ -55,7 +75,12 @@ export default function DashboardSeriesIndex({ series }: DashboardSeriesIndexPro
               <Card key={item.id} className='flex h-full flex-col overflow-hidden'>
                 <div className='aspect-[2/3] w-full bg-muted'>
                   {coverUrl ? (
-                    <img src={coverUrl} alt={item.title} className='h-full w-full object-cover' />
+                    <img
+                      src={coverUrl}
+                      alt={item.title}
+                      className='h-full w-full object-cover'
+                      loading='lazy'
+                    />
                   ) : (
                     <div className='flex h-full w-full items-center justify-center'>
                       <Film className='h-16 w-16 text-muted-foreground/50' />

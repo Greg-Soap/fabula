@@ -20,6 +20,12 @@ interface NovelShowProps {
     numberOfChapters: number | null
     themeUrl: string | null
   }
+  seo?: {
+    canonicalUrl: string
+    ogImageUrl?: string
+    description?: string
+    title: string
+  }
 }
 
 function getCoverUrl(coverImage: NovelShowProps['novel']['coverImage']): string | null {
@@ -27,7 +33,7 @@ function getCoverUrl(coverImage: NovelShowProps['novel']['coverImage']): string 
   return (coverImage as { url?: string }).url ?? null
 }
 
-export default function NovelShow({ novel }: NovelShowProps) {
+export default function NovelShow({ novel, seo }: NovelShowProps) {
   const coverUrl = getCoverUrl(novel.coverImage)
   const {
     videoId: themeVideoId,
@@ -36,10 +42,24 @@ export default function NovelShow({ novel }: NovelShowProps) {
     playFailed,
   } = useThemeAutoplay(novel.themeUrl)
   const themeEmbedUrlFallback = getYouTubeEmbedUrl(novel.themeUrl, { mute: true })
+  const title = seo?.title ?? novel.title
+  const description = seo?.description ?? novel.shortDescription ?? undefined
 
   return (
     <PublicLayout>
-      <Head title={novel.title} />
+      <Head title={title}>
+        {description && <meta name='description' content={description} />}
+        {seo?.canonicalUrl && <link rel='canonical' href={seo.canonicalUrl} />}
+        {seo?.ogImageUrl && <meta property='og:image' content={seo.ogImageUrl} />}
+        <meta property='og:title' content={title} />
+        {description && <meta property='og:description' content={description} />}
+        {seo?.canonicalUrl && <meta property='og:url' content={seo.canonicalUrl} />}
+        <meta property='og:type' content='website' />
+        <meta name='twitter:card' content={seo?.ogImageUrl ? 'summary_large_image' : 'summary'} />
+        <meta name='twitter:title' content={title} />
+        {description && <meta name='twitter:description' content={description} />}
+        {seo?.ogImageUrl && <meta name='twitter:image' content={seo.ogImageUrl} />}
+      </Head>
       <DetailPageBackground imageUrl={coverUrl} />
       <div className='relative max-w-screen-xl mx-auto px-6 py-12'>
         <Button
@@ -57,7 +77,12 @@ export default function NovelShow({ novel }: NovelShowProps) {
             className='aspect-[2/3] w-full max-w-[300px] overflow-hidden rounded-lg bg-muted opacity-0 animate-fabula-fade-in-up-subtle'
             style={{ animationDelay: '0.15s', animationFillMode: 'forwards' }}>
             {coverUrl ? (
-              <img src={coverUrl} alt={novel.title} className='h-full w-full object-cover' />
+              <img
+                src={coverUrl}
+                alt={novel.title}
+                className='h-full w-full object-cover'
+                loading='lazy'
+              />
             ) : (
               <div className='flex h-full w-full items-center justify-center'>
                 <BookOpen className='h-24 w-24 text-muted-foreground/50' />

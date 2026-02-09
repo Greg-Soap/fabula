@@ -21,6 +21,12 @@ interface SeriesShowProps {
     backdropUrl: string | null
     themeUrl: string | null
   }
+  seo?: {
+    canonicalUrl: string
+    ogImageUrl?: string
+    description?: string
+    title: string
+  }
 }
 
 function getCoverUrl(coverImage: SeriesShowProps['series']['coverImage']): string | null {
@@ -28,7 +34,7 @@ function getCoverUrl(coverImage: SeriesShowProps['series']['coverImage']): strin
   return (coverImage as { url?: string }).url ?? null
 }
 
-export default function SeriesShow({ series }: SeriesShowProps) {
+export default function SeriesShow({ series, seo }: SeriesShowProps) {
   const coverUrl = getCoverUrl(series.coverImage)
   const backgroundImageUrl = series.backdropUrl ?? coverUrl
   const embedUrl = getYouTubeEmbedUrl(series.trailerUrl)
@@ -39,10 +45,24 @@ export default function SeriesShow({ series }: SeriesShowProps) {
     playFailed,
   } = useThemeAutoplay(series.themeUrl)
   const themeEmbedUrlFallback = getYouTubeEmbedUrl(series.themeUrl, { mute: true })
+  const title = seo?.title ?? series.title
+  const description = seo?.description ?? series.shortDescription ?? undefined
 
   return (
     <PublicLayout>
-      <Head title={series.title} />
+      <Head title={title}>
+        {description && <meta name='description' content={description} />}
+        {seo?.canonicalUrl && <link rel='canonical' href={seo.canonicalUrl} />}
+        {seo?.ogImageUrl && <meta property='og:image' content={seo.ogImageUrl} />}
+        <meta property='og:title' content={title} />
+        {description && <meta property='og:description' content={description} />}
+        {seo?.canonicalUrl && <meta property='og:url' content={seo.canonicalUrl} />}
+        <meta property='og:type' content='website' />
+        <meta name='twitter:card' content={seo?.ogImageUrl ? 'summary_large_image' : 'summary'} />
+        <meta name='twitter:title' content={title} />
+        {description && <meta name='twitter:description' content={description} />}
+        {seo?.ogImageUrl && <meta name='twitter:image' content={seo.ogImageUrl} />}
+      </Head>
       <DetailPageBackground imageUrl={backgroundImageUrl} />
       <div className='relative max-w-screen-xl mx-auto px-6 py-12'>
         <Button
@@ -60,7 +80,12 @@ export default function SeriesShow({ series }: SeriesShowProps) {
             className='aspect-[2/3] w-full max-w-[300px] overflow-hidden rounded-lg bg-muted opacity-0 animate-fabula-fade-in-up-subtle'
             style={{ animationDelay: '0.15s', animationFillMode: 'forwards' }}>
             {coverUrl ? (
-              <img src={coverUrl} alt={series.title} className='h-full w-full object-cover' />
+              <img
+                src={coverUrl}
+                alt={series.title}
+                className='h-full w-full object-cover'
+                loading='lazy'
+              />
             ) : (
               <div className='flex h-full w-full items-center justify-center'>
                 <Film className='h-24 w-24 text-muted-foreground/50' />
