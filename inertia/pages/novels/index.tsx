@@ -11,20 +11,13 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { CalmPageBackground } from '@/components/calm-page-background'
+import { FabulaSelect, FabulaSheet } from '@/components/combination'
 import { PublicLayout } from '@/components/layouts/public'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 
 const NOVELS_VIEW_KEY = 'fabula-novels-view'
 
@@ -173,69 +166,60 @@ export default function NovelsIndex({
               ) : null}
             </div>
           </form>
-          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <SheetTrigger>
+          <FabulaSheet
+            trigger={
               <Button variant='outline' size='sm' className='h-11 gap-2 shrink-0'>
                 <SlidersHorizontal className='h-4 w-4' />
                 Filters
               </Button>
-            </SheetTrigger>
-            <SheetContent side='right' className='w-full sm:max-w-sm'>
-              <SheetHeader>
-                <SheetTitle>Filters</SheetTitle>
-              </SheetHeader>
-              <div className='mt-6 space-y-6'>
-                <div className='space-y-2'>
-                  <Label>Sort by</Label>
-                  <Select value={localSort} onValueChange={(v) => setLocalSort(v as SortOption)}>
-                    <SelectTrigger>
-                      <SelectValue>{SORT_LABELS[localSort]}</SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
-                        <SelectItem key={key} value={key}>
-                          {SORT_LABELS[key]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {genres.length > 0 && (
-                  <div className='space-y-2'>
-                    <Label>Genre</Label>
-                    <Select
-                      value={localGenre || '_'}
-                      onValueChange={(v) => setLocalGenre(v === '_' || v == null ? '' : v)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder='All genres' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value='_'>All genres</SelectItem>
-                        {genres.map((g) => (
-                          <SelectItem key={g} value={g}>
-                            {g}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                <div className='flex items-center space-x-2'>
-                  <Checkbox
-                    id='rated-only-novels'
-                    checked={localRatedOnly}
-                    onCheckedChange={(checked) => setLocalRatedOnly(checked === true)}
-                  />
-                  <Label htmlFor='rated-only-novels' className='cursor-pointer font-normal'>
-                    Rated only
-                  </Label>
-                </div>
-                <Button onClick={applyFilters} className='w-full'>
-                  Apply filters
-                </Button>
+            }
+            title='Filters'
+            side='right'
+            contentClassName='w-full sm:max-w-sm'
+            open={sheetOpen}
+            onOpenChange={setSheetOpen}>
+            <div className='space-y-6'>
+              <div className='space-y-2'>
+                <Label>Sort by</Label>
+                <FabulaSelect
+                  value={localSort}
+                  onValueChange={(v) => setLocalSort(v as SortOption)}
+                  options={(Object.keys(SORT_LABELS) as SortOption[]).map((key) => ({
+                    value: key,
+                    label: SORT_LABELS[key],
+                  }))}
+                  selectedLabel={SORT_LABELS[localSort]}
+                />
               </div>
-            </SheetContent>
-          </Sheet>
+              {genres.length > 0 && (
+                <div className='space-y-2'>
+                  <Label>Genre</Label>
+                  <FabulaSelect
+                    value={localGenre || '_'}
+                    onValueChange={(v) => setLocalGenre(v === '_' || v == null ? '' : v)}
+                    options={[
+                      { value: '_', label: 'All genres' },
+                      ...genres.map((g) => ({ value: g, label: g })),
+                    ]}
+                    placeholder='All genres'
+                  />
+                </div>
+              )}
+              <div className='flex items-center space-x-2'>
+                <Checkbox
+                  id='rated-only-novels'
+                  checked={localRatedOnly}
+                  onCheckedChange={(checked) => setLocalRatedOnly(checked === true)}
+                />
+                <Label htmlFor='rated-only-novels' className='cursor-pointer font-normal'>
+                  Rated only
+                </Label>
+              </div>
+              <Button onClick={applyFilters} className='w-full'>
+                Apply filters
+              </Button>
+            </div>
+          </FabulaSheet>
           <div className='flex shrink-0 gap-1'>
             <Button
               variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
