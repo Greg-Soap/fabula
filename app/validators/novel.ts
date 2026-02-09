@@ -32,6 +32,15 @@ export const createNovelValidator = vine.compile(
       .trim()
       .optional()
       .transform((v) => (v && v.length > 0 ? v : undefined)),
+    genre: vine.string().trim().maxLength(100).optional(),
+    releaseYear: vine
+      .any()
+      .optional()
+      .transform((v) => {
+        if (v === '' || v === undefined || v === null) return undefined
+        const n = Number(v)
+        return Number.isInteger(n) && n >= 1900 && n <= 2100 ? n : undefined
+      }),
   }),
 )
 
@@ -50,5 +59,14 @@ export const updateNovelValidator = vine.compile(
       .trim()
       .optional()
       .transform((v) => (v && v.length > 0 ? v : undefined)),
+    genre: vine.string().trim().maxLength(100).optional(),
+    releaseYear: vine
+      .any()
+      .optional()
+      .transform((v) => {
+        if (v === '' || v === undefined || v === null) return undefined
+        const n = Number(v)
+        return Number.isInteger(n) && n >= 1900 && n <= 2100 ? n : undefined
+      }),
   }),
 )

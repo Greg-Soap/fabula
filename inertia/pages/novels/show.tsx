@@ -1,5 +1,7 @@
 import { Head, Link } from '@inertiajs/react'
-import { ArrowLeft, BookOpen, ExternalLink, Music2, Star } from 'lucide-react'
+import { ArrowLeft, BookOpen, ExternalLink, Music2, Share2, Star } from 'lucide-react'
+import { useState } from 'react'
+import { toast } from 'sonner'
 import { DetailPageBackground } from '@/components/detail-page-background'
 import { PublicLayout } from '@/components/layouts/public'
 import { Button } from '@/components/ui/button'
@@ -19,6 +21,8 @@ interface NovelShowProps {
     externalLink: string | null
     numberOfChapters: number | null
     themeUrl: string | null
+    genre: string | null
+    releaseYear: number | null
   }
   seo?: {
     canonicalUrl: string
@@ -34,6 +38,7 @@ function getCoverUrl(coverImage: NovelShowProps['novel']['coverImage']): string 
 }
 
 export default function NovelShow({ novel, seo }: NovelShowProps) {
+  const [sharing, setSharing] = useState(false)
   const coverUrl = getCoverUrl(novel.coverImage)
   const {
     videoId: themeVideoId,
@@ -44,6 +49,32 @@ export default function NovelShow({ novel, seo }: NovelShowProps) {
   const themeEmbedUrlFallback = getYouTubeEmbedUrl(novel.themeUrl, { mute: true })
   const title = seo?.title ?? novel.title
   const description = seo?.description ?? novel.shortDescription ?? undefined
+
+  async function handleShare() {
+    const url = typeof window !== 'undefined' ? window.location.href : ''
+    if (!url) return
+    setSharing(true)
+    try {
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share({
+          url,
+          title: novel.title,
+          text: novel.shortDescription ?? undefined,
+        })
+        toast.success('Link shared')
+      } else {
+        await navigator.clipboard.writeText(url)
+        toast.success('Link copied to clipboard')
+      }
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError') {
+        await navigator.clipboard?.writeText(url).catch(() => {})
+        toast.success('Link copied to clipboard')
+      }
+    } finally {
+      setSharing(false)
+    }
+  }
 
   return (
     <PublicLayout>
@@ -62,15 +93,21 @@ export default function NovelShow({ novel, seo }: NovelShowProps) {
       </Head>
       <DetailPageBackground imageUrl={coverUrl} />
       <div className='relative max-w-screen-xl mx-auto px-6 py-12'>
-        <Button
-          variant='ghost'
-          size='sm'
-          leftIcon={<ArrowLeft className='h-4 w-4' />}
-          className='opacity-0 animate-fabula-fade-in-up-subtle'
-          style={{ animationDelay: '0.05s', animationFillMode: 'forwards' }}
-          asChild>
-          <Link href='/novels'>Back to Novels</Link>
-        </Button>
+        <div
+          className='flex flex-wrap items-center justify-between gap-2 opacity-0 animate-fabula-fade-in-up-subtle'
+          style={{ animationDelay: '0.05s', animationFillMode: 'forwards' }}>
+          <Button variant='ghost' size='sm' leftIcon={<ArrowLeft className='h-4 w-4' />} asChild>
+            <Link href='/novels'>Back to Novels</Link>
+          </Button>
+          <Button
+            variant='outline'
+            size='sm'
+            leftIcon={<Share2 className='h-4 w-4' />}
+            onClick={handleShare}
+            disabled={sharing}>
+            {sharing ? 'Sharing…' : 'Share'}
+          </Button>
+        </div>
 
         <div className='mt-8 grid gap-8 lg:grid-cols-[300px_1fr]'>
           <div
@@ -96,6 +133,8 @@ export default function NovelShow({ novel, seo }: NovelShowProps) {
             <div>
               <h1 className='font-heading text-3xl font-normal tracking-tight'>{novel.title}</h1>
               <div className='mt-2 flex flex-wrap items-center gap-3 text-muted-foreground'>
+                {novel.releaseYear != null && <span>{novel.releaseYear}</span>}
+                {novel.genre && <span>{novel.genre}</span>}
                 {novel.rating != null && (
                   <span className='flex items-center gap-1'>
                     <Star className='h-4 w-4 fill-amber-400 text-amber-400' />

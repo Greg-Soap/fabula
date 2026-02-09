@@ -19,10 +19,85 @@ function ensureUniqueSlug(baseSlug: string, excludeId?: string): Promise<string>
   })()
 }
 
+function escapeLikePattern(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_')
+}
+
 export default class NovelsController {
-  async index({ inertia }: HttpContext) {
-    const novels = await Novel.query().orderBy('title', 'asc')
-    return inertia.render('novels/index', { novels: novels.map((n) => n.serialize()) })
+  async index({ inertia, request }: HttpContext) {
+    const searchQuery = (request.input('q') ?? '').trim()
+    const sort = (request.input('sort') ?? 'name_asc') as string
+    const ratedOnly = request.input('rated_only') === '1' || request.input('rated_only') === true
+    const genre = (request.input('genre') ?? '').trim()
+    const query = Novel.query()
+
+    if (searchQuery) {
+      const pattern = `%${escapeLikePattern(searchQuery)}%`
+      query.where((builder) => {
+        builder
+          .whereRaw('title ILIKE ?', [pattern])
+          .orWhereRaw('short_description ILIKE ?', [pattern])
+      })
+    }
+
+    if (ratedOnly) {
+      query.whereNotNull('rating')
+    }
+
+    if (genre) {
+      query.where('genre', genre)
+    }
+
+    switch (sort) {
+      case 'name_desc':
+        query.orderBy('title', 'desc')
+        break
+      case 'date_desc':
+        query.orderBy('created_at', 'desc')
+        break
+      case 'date_asc':
+        query.orderBy('created_at', 'asc')
+        break
+      case 'rating_desc':
+        query.orderByRaw('rating DESC NULLS LAST')
+        break
+      case 'year_desc':
+        query.orderByRaw('release_year DESC NULLS LAST')
+        break
+      case 'year_asc':
+        query.orderByRaw('release_year ASC NULLS LAST')
+        break
+      default:
+        query.orderBy('title', 'asc')
+    }
+
+    const novels = await query
+    const genres = await Novel.query()
+      .select('genre')
+      .whereNotNull('genre')
+      .whereNot('genre', '')
+      .distinct('genre')
+      .orderBy('genre', 'asc')
+      .then((rows) => rows.map((r) => r.genre).filter(Boolean) as string[])
+
+    const validSort =
+      sort === 'name_desc' ||
+      sort === 'date_desc' ||
+      sort === 'date_asc' ||
+      sort === 'rating_desc' ||
+      sort === 'year_desc' ||
+      sort === 'year_asc'
+        ? sort
+        : 'name_asc'
+
+    return inertia.render('novels/index', {
+      novels: novels.map((n) => n.serialize()),
+      searchQuery,
+      sort: validSort,
+      ratedOnly,
+      genre: genre || undefined,
+      genres,
+    })
   }
 
   async show({ params, inertia, request, response }: HttpContext) {
@@ -86,6 +161,8 @@ export default class NovelsController {
     novel.externalLink = payload.externalLink ?? null
     novel.numberOfChapters = payload.numberOfChapters ?? null
     novel.themeUrl = payload.themeUrl ?? null
+    novel.genre = payload.genre ?? null
+    novel.releaseYear = payload.releaseYear ?? null
 
     const coverFile = request.file('coverImage')
     if (coverFile?.isValid) {
@@ -132,6 +209,8 @@ export default class NovelsController {
     novel.externalLink = payload.externalLink ?? null
     novel.numberOfChapters = payload.numberOfChapters ?? null
     novel.themeUrl = payload.themeUrl ?? null
+    novel.genre = payload.genre ?? null
+    novel.releaseYear = payload.releaseYear ?? null
 
     const coverFile = request.file('coverImage')
     if (coverFile?.isValid) {

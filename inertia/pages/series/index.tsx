@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react'
-import { Film, Search, SlidersHorizontal, Star, X } from 'lucide-react'
+import { Film, LayoutGrid, List, Search, Shuffle, SlidersHorizontal, Star, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { CalmPageBackground } from '@/components/calm-page-background'
 import { PublicLayout } from '@/components/layouts/public'
@@ -17,6 +17,8 @@ import {
 } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 
+const SERIES_VIEW_KEY = 'fabula-series-view'
+
 interface SeriesItem {
   id: string
   title: string
@@ -24,15 +26,26 @@ interface SeriesItem {
   shortDescription: string | null
   rating: number | null
   coverImage: { url?: string } | null
+  genre: string | null
+  releaseYear: number | null
 }
 
-type SortOption = 'name_asc' | 'name_desc' | 'date_desc' | 'rating_desc'
+type SortOption =
+  | 'name_asc'
+  | 'name_desc'
+  | 'date_desc'
+  | 'date_asc'
+  | 'rating_desc'
+  | 'year_desc'
+  | 'year_asc'
 
 interface SeriesIndexProps {
   series: SeriesItem[]
   searchQuery?: string
   sort?: SortOption
   ratedOnly?: boolean
+  genre?: string
+  genres: string[]
 }
 
 function getCoverUrl(coverImage: SeriesItem['coverImage']): string | null {
@@ -44,7 +57,10 @@ const SORT_LABELS: Record<SortOption, string> = {
   name_asc: 'Name (A–Z)',
   name_desc: 'Name (Z–A)',
   date_desc: 'Recently added',
+  date_asc: 'Oldest added',
   rating_desc: 'Rating (high to low)',
+  year_desc: 'Year (newest first)',
+  year_asc: 'Year (oldest first)',
 }
 
 export default function SeriesIndex({
@@ -52,25 +68,48 @@ export default function SeriesIndex({
   searchQuery = '',
   sort = 'name_asc',
   ratedOnly = false,
+  genre = '',
+  genres = [],
 }: SeriesIndexProps) {
   const [sheetOpen, setSheetOpen] = useState(false)
   const [localSort, setLocalSort] = useState<SortOption>(sort)
   const [localRatedOnly, setLocalRatedOnly] = useState(ratedOnly)
+  const [localGenre, setLocalGenre] = useState(genre)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
+    if (typeof window === 'undefined') return 'grid'
+    return (localStorage.getItem(SERIES_VIEW_KEY) as 'grid' | 'list') || 'grid'
+  })
 
   useEffect(() => {
     if (sheetOpen) {
       setLocalSort(sort)
       setLocalRatedOnly(ratedOnly)
+      setLocalGenre(genre)
     }
-  }, [sheetOpen, sort, ratedOnly])
+  }, [sheetOpen, sort, ratedOnly, genre])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SERIES_VIEW_KEY, viewMode)
+    } catch {
+      // ignore
+    }
+  }, [viewMode])
 
   function applyFilters() {
     const params: Record<string, string> = {}
     if (searchQuery) params.q = searchQuery
     if (localSort !== 'name_asc') params.sort = localSort
     if (localRatedOnly) params.rated_only = '1'
+    if (localGenre) params.genre = localGenre
     router.get('/series', Object.keys(params).length ? params : {})
     setSheetOpen(false)
+  }
+
+  function goToRandom() {
+    if (series.length === 0) return
+    const item = series[Math.floor(Math.random() * series.length)]
+    router.visit(`/series/${item.slug}`)
   }
 
   return (
@@ -95,6 +134,7 @@ export default function SeriesIndex({
           <form method='get' action='/series' className='flex flex-1 min-w-0 max-w-md'>
             <input type='hidden' name='sort' value={sort} />
             {ratedOnly && <input type='hidden' name='rated_only' value='1' />}
+            {genre && <input type='hidden' name='genre' value={genre} />}
             <div className='relative flex-1'>
               <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
               <Input
@@ -116,6 +156,7 @@ export default function SeriesIndex({
                     const params: Record<string, string> = {}
                     if (sort !== 'name_asc') params.sort = sort
                     if (ratedOnly) params.rated_only = '1'
+                    if (genre) params.genre = genre
                     router.get('/series', params)
                   }}>
                   <X className='h-4 w-4' />
@@ -150,6 +191,26 @@ export default function SeriesIndex({
                     </SelectContent>
                   </Select>
                 </div>
+                {genres.length > 0 && (
+                  <div className='space-y-2'>
+                    <Label>Genre</Label>
+                    <Select
+                      value={localGenre || '_'}
+                      onValueChange={(v) => setLocalGenre(v === '_' || v == null ? '' : v)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder='All genres' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value='_'>All genres</SelectItem>
+                        {genres.map((g) => (
+                          <SelectItem key={g} value={g}>
+                            {g}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div className='flex items-center space-x-2'>
                   <Checkbox
                     id='rated-only'
@@ -166,11 +227,99 @@ export default function SeriesIndex({
               </div>
             </SheetContent>
           </Sheet>
+          <div className='flex shrink-0 gap-1'>
+            <Button
+              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+              size='icon'
+              className='h-11 w-11'
+              aria-label='Grid view'
+              onClick={() => setViewMode('grid')}>
+              <LayoutGrid className='h-4 w-4' />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+              size='icon'
+              className='h-11 w-11'
+              aria-label='List view'
+              onClick={() => setViewMode('list')}>
+              <List className='h-4 w-4' />
+            </Button>
+            <Button
+              variant='outline'
+              size='sm'
+              className='h-11 gap-2'
+              onClick={goToRandom}
+              disabled={series.length === 0}
+              aria-label='Surprise me'>
+              <Shuffle className='h-4 w-4' />
+              Surprise me
+            </Button>
+          </div>
         </div>
 
-        <div className='mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
+        <div
+          className={
+            viewMode === 'grid'
+              ? 'mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+              : 'mt-10 flex flex-col gap-2'
+          }>
           {series.map((item, index) => {
             const coverUrl = getCoverUrl(item.coverImage)
+            const meta = [item.releaseYear, item.genre].filter(Boolean).join(' · ')
+            if (viewMode === 'list') {
+              return (
+                <Link
+                  key={item.id}
+                  href={`/series/${item.slug}`}
+                  className='group opacity-0 animate-fabula-fade-in-up-subtle'
+                  style={{
+                    animationDelay: `${0.25 + index * 0.03}s`,
+                    animationFillMode: 'forwards',
+                  }}>
+                  <Card className='overflow-hidden transition-shadow hover:shadow-md'>
+                    <div className='flex flex-row'>
+                      <div className='w-20 shrink-0 bg-muted sm:w-28'>
+                        {coverUrl ? (
+                          <img
+                            src={coverUrl}
+                            alt={item.title}
+                            className='h-full w-full object-cover'
+                            loading='lazy'
+                          />
+                        ) : (
+                          <div className='flex aspect-[2/3] w-full items-center justify-center'>
+                            <Film className='h-8 w-8 text-muted-foreground/50 sm:h-10 sm:w-10' />
+                          </div>
+                        )}
+                      </div>
+                      <CardHeader className='min-w-0 flex-1 py-3 pr-4'>
+                        <CardContent className='p-0'>
+                          <h2 className='font-semibold leading-tight group-hover:text-primary'>
+                            {item.title}
+                          </h2>
+                          {(meta || item.rating != null) && (
+                            <div className='mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground'>
+                              {meta && <span>{meta}</span>}
+                              {item.rating != null && (
+                                <span className='flex items-center gap-1'>
+                                  <Star className='h-3.5 w-3.5 fill-amber-400 text-amber-400' />
+                                  {Number(item.rating).toFixed(1)}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          {item.shortDescription && (
+                            <p className='mt-1 line-clamp-2 text-sm text-muted-foreground'>
+                              {item.shortDescription}
+                            </p>
+                          )}
+                        </CardContent>
+                      </CardHeader>
+                    </div>
+                  </Card>
+                </Link>
+              )
+            }
             return (
               <Link
                 key={item.id}
@@ -200,10 +349,15 @@ export default function SeriesIndex({
                       <h2 className='font-semibold leading-tight group-hover:text-primary'>
                         {item.title}
                       </h2>
-                      {item.rating != null && (
-                        <div className='mt-1 flex items-center gap-1 text-sm text-muted-foreground'>
-                          <Star className='h-4 w-4 fill-amber-400 text-amber-400' />
-                          <span>{Number(item.rating).toFixed(1)}</span>
+                      {(meta || item.rating != null) && (
+                        <div className='mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground'>
+                          {meta && <span>{meta}</span>}
+                          {item.rating != null && (
+                            <span className='flex items-center gap-1'>
+                              <Star className='h-4 w-4 fill-amber-400 text-amber-400' />
+                              {Number(item.rating).toFixed(1)}
+                            </span>
+                          )}
                         </div>
                       )}
                       {item.shortDescription && (

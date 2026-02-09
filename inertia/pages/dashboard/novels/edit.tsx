@@ -19,6 +19,8 @@ interface NovelEditProps {
     externalLink: string | null
     numberOfChapters: number | null
     themeUrl: string | null
+    genre: string | null
+    releaseYear: number | null
     coverImage?: { url?: string } | null
   }
 }
@@ -37,6 +39,8 @@ export default function DashboardNovelsEdit({ novel }: NovelEditProps) {
     coverImage: null as File | null,
     coverImageUrl: '',
     themeUrl: novel.themeUrl ?? '',
+    genre: novel.genre ?? '',
+    releaseYear: novel.releaseYear ?? ('' as string | number),
   })
 
   const { mutate: fetchInfo, isPending: isFetching } = useFetchNovelInfo({
@@ -184,6 +188,29 @@ export default function DashboardNovelsEdit({ novel }: NovelEditProps) {
               error={form.errors.themeUrl}
               type='url'
               placeholder='https://www.youtube.com/watch?v=...'
+            />
+
+            <TextInput
+              label='Genre'
+              name='genre'
+              value={form.data.genre}
+              onChange={(e) => form.setData('genre', e.target.value)}
+              error={form.errors.genre}
+              placeholder='e.g. Fantasy, Romance'
+            />
+
+            <TextInput
+              label='Release year'
+              name='releaseYear'
+              value={form.data.releaseYear === '' ? '' : form.data.releaseYear}
+              onChange={(e) =>
+                form.setData('releaseYear', e.target.value === '' ? '' : Number(e.target.value))
+              }
+              error={form.errors.releaseYear}
+              type='number'
+              min={1900}
+              max={2100}
+              placeholder='e.g. 2020'
             />
 
             <div className='flex gap-4'>

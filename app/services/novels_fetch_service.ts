@@ -7,12 +7,16 @@ export interface NovelFetchResult {
   longDescription?: string
   coverImageUrl?: string
   externalLink?: string
+  genre?: string
+  releaseYear?: number
 }
 
 interface SearchDoc {
   title?: string | string[]
   cover_i?: number
   key?: string
+  first_publish_year?: number
+  subject?: string[]
 }
 
 interface WorkDescription {
@@ -77,12 +81,28 @@ export class NovelsFetchService {
 
     const shortDescription = longDescription != null ? longDescription.slice(0, 500) : undefined
 
+    const releaseYear =
+      first.first_publish_year != null &&
+      Number.isInteger(first.first_publish_year) &&
+      first.first_publish_year >= 1900 &&
+      first.first_publish_year <= 2100
+        ? first.first_publish_year
+        : undefined
+
+    const subjects = Array.isArray(first.subject)
+      ? first.subject.map((s) => (typeof s === 'string' ? s.trim() : '')).filter(Boolean)
+      : []
+    const genreRaw = subjects.length > 0 ? subjects.slice(0, 3).join(', ') : undefined
+    const genre = genreRaw != null && genreRaw.length > 0 ? genreRaw.slice(0, 100) : undefined
+
     return {
       title,
       shortDescription,
       longDescription,
       coverImageUrl,
       externalLink,
+      genre,
+      releaseYear,
     }
   }
 }

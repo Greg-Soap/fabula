@@ -14,6 +14,8 @@ export interface SeriesFetchResult {
   coverImageUrl?: string
   tmdbId?: number
   backdropUrl?: string
+  genre?: string
+  releaseYear?: number
 }
 
 export class SeriesFetchService {
@@ -56,6 +58,8 @@ export class SeriesFetchService {
       vote_average?: number
       poster_path?: string | null
       backdrop_path?: string | null
+      first_air_date?: string | null
+      genres?: { id?: number; name?: string }[]
     }
 
     let trailerUrl: string | undefined
@@ -88,6 +92,22 @@ export class SeriesFetchService {
         ? `${TMDB_BACKDROP_BASE}${details.backdrop_path}`
         : undefined
 
+    let releaseYear: number | undefined
+    const airDate = details.first_air_date?.trim()
+    if (airDate) {
+      const year = parseInt(airDate.slice(0, 4), 10)
+      if (Number.isInteger(year) && year >= 1900 && year <= 2100) {
+        releaseYear = year
+      }
+    }
+
+    const genreNames = details.genres
+      ?.map((g) => g.name?.trim())
+      .filter((n): n is string => Boolean(n))
+    const genreRaw =
+      genreNames != null && genreNames.length > 0 ? genreNames.slice(0, 3).join(', ') : undefined
+    const genre = genreRaw != null && genreRaw.length > 0 ? genreRaw.slice(0, 100) : undefined
+
     return {
       title,
       shortDescription: overview ? overview.slice(0, 500) : undefined,
@@ -98,6 +118,8 @@ export class SeriesFetchService {
       coverImageUrl,
       tmdbId: first.id,
       backdropUrl,
+      genre,
+      releaseYear,
     }
   }
 }

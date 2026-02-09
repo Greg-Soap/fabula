@@ -1,8 +1,32 @@
-import { Head, Link } from '@inertiajs/react'
-import { BookOpen, Star } from 'lucide-react'
+import { Head, Link, router } from '@inertiajs/react'
+import {
+  BookOpen,
+  LayoutGrid,
+  List,
+  Search,
+  Shuffle,
+  SlidersHorizontal,
+  Star,
+  X,
+} from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { CalmPageBackground } from '@/components/calm-page-background'
 import { PublicLayout } from '@/components/layouts/public'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+
+const NOVELS_VIEW_KEY = 'fabula-novels-view'
 
 interface NovelItem {
   id: string
@@ -11,10 +35,26 @@ interface NovelItem {
   shortDescription: string | null
   rating: number | null
   coverImage: { url?: string } | null
+  genre: string | null
+  releaseYear: number | null
 }
+
+type SortOption =
+  | 'name_asc'
+  | 'name_desc'
+  | 'date_desc'
+  | 'date_asc'
+  | 'rating_desc'
+  | 'year_desc'
+  | 'year_asc'
 
 interface NovelsIndexProps {
   novels: NovelItem[]
+  searchQuery?: string
+  sort?: SortOption
+  ratedOnly?: boolean
+  genre?: string
+  genres: string[]
 }
 
 function getCoverUrl(coverImage: NovelItem['coverImage']): string | null {
@@ -22,7 +62,65 @@ function getCoverUrl(coverImage: NovelItem['coverImage']): string | null {
   return (coverImage as { url?: string }).url ?? null
 }
 
-export default function NovelsIndex({ novels }: NovelsIndexProps) {
+const SORT_LABELS: Record<SortOption, string> = {
+  name_asc: 'Name (A–Z)',
+  name_desc: 'Name (Z–A)',
+  date_desc: 'Recently added',
+  date_asc: 'Oldest added',
+  rating_desc: 'Rating (high to low)',
+  year_desc: 'Year (newest first)',
+  year_asc: 'Year (oldest first)',
+}
+
+export default function NovelsIndex({
+  novels,
+  searchQuery = '',
+  sort = 'name_asc',
+  ratedOnly = false,
+  genre = '',
+  genres = [],
+}: NovelsIndexProps) {
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [localSort, setLocalSort] = useState<SortOption>(sort)
+  const [localRatedOnly, setLocalRatedOnly] = useState(ratedOnly)
+  const [localGenre, setLocalGenre] = useState(genre)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
+    if (typeof window === 'undefined') return 'grid'
+    return (localStorage.getItem(NOVELS_VIEW_KEY) as 'grid' | 'list') || 'grid'
+  })
+
+  useEffect(() => {
+    if (sheetOpen) {
+      setLocalSort(sort)
+      setLocalRatedOnly(ratedOnly)
+      setLocalGenre(genre)
+    }
+  }, [sheetOpen, sort, ratedOnly, genre])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(NOVELS_VIEW_KEY, viewMode)
+    } catch {
+      // ignore
+    }
+  }, [viewMode])
+
+  function applyFilters() {
+    const params: Record<string, string> = {}
+    if (searchQuery) params.q = searchQuery
+    if (localSort !== 'name_asc') params.sort = localSort
+    if (localRatedOnly) params.rated_only = '1'
+    if (localGenre) params.genre = localGenre
+    router.get('/novels', Object.keys(params).length ? params : {})
+    setSheetOpen(false)
+  }
+
+  function goToRandom() {
+    if (novels.length === 0) return
+    const item = novels[Math.floor(Math.random() * novels.length)]
+    router.visit(`/novels/${item.slug}`)
+  }
+
   return (
     <PublicLayout>
       <Head title='Novels' />
@@ -39,9 +137,198 @@ export default function NovelsIndex({ novels }: NovelsIndexProps) {
           Discover and share your favourite novels.
         </p>
 
-        <div className='mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
+        <div
+          className='mt-8 flex flex-wrap items-center gap-3 opacity-0 animate-fabula-fade-in-up-subtle'
+          style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
+          <form method='get' action='/novels' className='flex flex-1 min-w-0 max-w-md'>
+            <input type='hidden' name='sort' value={sort} />
+            {ratedOnly && <input type='hidden' name='rated_only' value='1' />}
+            {genre && <input type='hidden' name='genre' value={genre} />}
+            <div className='relative flex-1'>
+              <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+              <Input
+                type='search'
+                name='q'
+                defaultValue={searchQuery}
+                placeholder='Search by title or description…'
+                className='h-11 rounded-full border-border bg-background/80 pl-10 pr-10 focus-visible:ring-2'
+                autoComplete='off'
+              />
+              {searchQuery ? (
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='icon'
+                  className='absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full text-muted-foreground hover:text-foreground'
+                  aria-label='Clear search'
+                  onClick={() => {
+                    const params: Record<string, string> = {}
+                    if (sort !== 'name_asc') params.sort = sort
+                    if (ratedOnly) params.rated_only = '1'
+                    if (genre) params.genre = genre
+                    router.get('/novels', params)
+                  }}>
+                  <X className='h-4 w-4' />
+                </Button>
+              ) : null}
+            </div>
+          </form>
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+            <SheetTrigger>
+              <Button variant='outline' size='sm' className='h-11 gap-2 shrink-0'>
+                <SlidersHorizontal className='h-4 w-4' />
+                Filters
+              </Button>
+            </SheetTrigger>
+            <SheetContent side='right' className='w-full sm:max-w-sm'>
+              <SheetHeader>
+                <SheetTitle>Filters</SheetTitle>
+              </SheetHeader>
+              <div className='mt-6 space-y-6'>
+                <div className='space-y-2'>
+                  <Label>Sort by</Label>
+                  <Select value={localSort} onValueChange={(v) => setLocalSort(v as SortOption)}>
+                    <SelectTrigger>
+                      <SelectValue>{SORT_LABELS[localSort]}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
+                        <SelectItem key={key} value={key}>
+                          {SORT_LABELS[key]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {genres.length > 0 && (
+                  <div className='space-y-2'>
+                    <Label>Genre</Label>
+                    <Select
+                      value={localGenre || '_'}
+                      onValueChange={(v) => setLocalGenre(v === '_' || v == null ? '' : v)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder='All genres' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value='_'>All genres</SelectItem>
+                        {genres.map((g) => (
+                          <SelectItem key={g} value={g}>
+                            {g}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                <div className='flex items-center space-x-2'>
+                  <Checkbox
+                    id='rated-only-novels'
+                    checked={localRatedOnly}
+                    onCheckedChange={(checked) => setLocalRatedOnly(checked === true)}
+                  />
+                  <Label htmlFor='rated-only-novels' className='cursor-pointer font-normal'>
+                    Rated only
+                  </Label>
+                </div>
+                <Button onClick={applyFilters} className='w-full'>
+                  Apply filters
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+          <div className='flex shrink-0 gap-1'>
+            <Button
+              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+              size='icon'
+              className='h-11 w-11'
+              aria-label='Grid view'
+              onClick={() => setViewMode('grid')}>
+              <LayoutGrid className='h-4 w-4' />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+              size='icon'
+              className='h-11 w-11'
+              aria-label='List view'
+              onClick={() => setViewMode('list')}>
+              <List className='h-4 w-4' />
+            </Button>
+            <Button
+              variant='outline'
+              size='sm'
+              className='h-11 gap-2'
+              onClick={goToRandom}
+              disabled={novels.length === 0}
+              aria-label='Surprise me'>
+              <Shuffle className='h-4 w-4' />
+              Surprise me
+            </Button>
+          </div>
+        </div>
+
+        <div
+          className={
+            viewMode === 'grid'
+              ? 'mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+              : 'mt-10 flex flex-col gap-2'
+          }>
           {novels.map((item, index) => {
             const coverUrl = getCoverUrl(item.coverImage)
+            const meta = [item.releaseYear, item.genre].filter(Boolean).join(' · ')
+            if (viewMode === 'list') {
+              return (
+                <Link
+                  key={item.id}
+                  href={`/novels/${item.slug}`}
+                  className='group opacity-0 animate-fabula-fade-in-up-subtle'
+                  style={{
+                    animationDelay: `${0.25 + index * 0.03}s`,
+                    animationFillMode: 'forwards',
+                  }}>
+                  <Card className='overflow-hidden transition-shadow hover:shadow-md'>
+                    <div className='flex flex-row'>
+                      <div className='w-20 shrink-0 bg-muted sm:w-28'>
+                        {coverUrl ? (
+                          <img
+                            src={coverUrl}
+                            alt={item.title}
+                            className='h-full w-full object-cover'
+                            loading='lazy'
+                          />
+                        ) : (
+                          <div className='flex aspect-[2/3] w-full items-center justify-center'>
+                            <BookOpen className='h-8 w-8 text-muted-foreground/50 sm:h-10 sm:w-10' />
+                          </div>
+                        )}
+                      </div>
+                      <CardHeader className='min-w-0 flex-1 py-3 pr-4'>
+                        <CardContent className='p-0'>
+                          <h2 className='font-semibold leading-tight group-hover:text-primary'>
+                            {item.title}
+                          </h2>
+                          {(meta || item.rating != null) && (
+                            <div className='mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground'>
+                              {meta && <span>{meta}</span>}
+                              {item.rating != null && (
+                                <span className='flex items-center gap-1'>
+                                  <Star className='h-3.5 w-3.5 fill-amber-400 text-amber-400' />
+                                  {Number(item.rating).toFixed(1)}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          {item.shortDescription && (
+                            <p className='mt-1 line-clamp-2 text-sm text-muted-foreground'>
+                              {item.shortDescription}
+                            </p>
+                          )}
+                        </CardContent>
+                      </CardHeader>
+                    </div>
+                  </Card>
+                </Link>
+              )
+            }
             return (
               <Link
                 key={item.id}
@@ -71,10 +358,15 @@ export default function NovelsIndex({ novels }: NovelsIndexProps) {
                       <h2 className='font-semibold leading-tight group-hover:text-primary'>
                         {item.title}
                       </h2>
-                      {item.rating != null && (
-                        <div className='mt-1 flex items-center gap-1 text-sm text-muted-foreground'>
-                          <Star className='h-4 w-4 fill-amber-400 text-amber-400' />
-                          <span>{Number(item.rating).toFixed(1)}</span>
+                      {(meta || item.rating != null) && (
+                        <div className='mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground'>
+                          {meta && <span>{meta}</span>}
+                          {item.rating != null && (
+                            <span className='flex items-center gap-1'>
+                              <Star className='h-4 w-4 fill-amber-400 text-amber-400' />
+                              {Number(item.rating).toFixed(1)}
+                            </span>
+                          )}
                         </div>
                       )}
                       {item.shortDescription && (
@@ -95,7 +387,9 @@ export default function NovelsIndex({ novels }: NovelsIndexProps) {
             className='mt-16 text-center text-muted-foreground opacity-0 animate-fabula-fade-in-up-subtle'
             style={{ animationDelay: '0.25s', animationFillMode: 'forwards' }}>
             <BookOpen className='mx-auto h-12 w-12 opacity-50' />
-            <p className='mt-4'>No novels in the catalog yet.</p>
+            <p className='mt-4'>
+              {searchQuery ? 'No novels match your search.' : 'No novels in the catalog yet.'}
+            </p>
           </div>
         )}
       </div>

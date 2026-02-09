@@ -24,6 +24,8 @@ export default function DashboardSeriesCreate() {
     tmdbId: undefined as number | undefined,
     backdropUrl: '',
     themeUrl: '',
+    genre: '',
+    releaseYear: '' as string | number,
   })
 
   const { mutate: fetchInfo, isPending: isFetching } = useFetchSeriesInfo({
@@ -39,6 +41,8 @@ export default function DashboardSeriesCreate() {
         ...(data.coverImageUrl != null && { coverImageUrl: data.coverImageUrl }),
         ...(data.tmdbId != null && { tmdbId: data.tmdbId }),
         ...(data.backdropUrl != null && { backdropUrl: data.backdropUrl }),
+        ...(data.genre != null && { genre: data.genre }),
+        ...(data.releaseYear != null && { releaseYear: data.releaseYear }),
       })
     },
   })
@@ -175,6 +179,29 @@ export default function DashboardSeriesCreate() {
               error={form.errors.themeUrl}
               type='url'
               placeholder='https://www.youtube.com/watch?v=...'
+            />
+
+            <TextInput
+              label='Genre'
+              name='genre'
+              value={form.data.genre}
+              onChange={(e) => form.setData('genre', e.target.value)}
+              error={form.errors.genre}
+              placeholder='e.g. Sci-Fi, Drama'
+            />
+
+            <TextInput
+              label='Release year'
+              name='releaseYear'
+              value={form.data.releaseYear === '' ? '' : form.data.releaseYear}
+              onChange={(e) =>
+                form.setData('releaseYear', e.target.value === '' ? '' : Number(e.target.value))
+              }
+              error={form.errors.releaseYear}
+              type='number'
+              min={1900}
+              max={2100}
+              placeholder='e.g. 2020'
             />
 
             <div className='flex gap-4'>

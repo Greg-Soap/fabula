@@ -45,6 +45,12 @@ export default class Series extends SuperBaseModel {
   @column()
   declare themeUrl: string | null
 
+  @column()
+  declare genre: string | null
+
+  @column()
+  declare releaseYear: number | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

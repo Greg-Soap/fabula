@@ -12,6 +12,8 @@ export interface SeriesFetchPayload {
   coverImageUrl?: string
   tmdbId?: number
   backdropUrl?: string
+  genre?: string
+  releaseYear?: number
 }
 
 function fetchSeriesInfo(query: string): Promise<SeriesFetchPayload> {

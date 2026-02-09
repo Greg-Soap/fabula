@@ -28,6 +28,7 @@ export default class SeriesController {
     const searchQuery = (request.input('q') ?? '').trim()
     const sort = (request.input('sort') ?? 'name_asc') as string
     const ratedOnly = request.input('rated_only') === '1' || request.input('rated_only') === true
+    const genre = (request.input('genre') ?? '').trim()
     const query = Series.query()
 
     if (searchQuery) {
@@ -43,6 +44,10 @@ export default class SeriesController {
       query.whereNotNull('rating')
     }
 
+    if (genre) {
+      query.where('genre', genre)
+    }
+
     switch (sort) {
       case 'name_desc':
         query.orderBy('title', 'desc')
@@ -50,20 +55,48 @@ export default class SeriesController {
       case 'date_desc':
         query.orderBy('created_at', 'desc')
         break
+      case 'date_asc':
+        query.orderBy('created_at', 'asc')
+        break
       case 'rating_desc':
         query.orderByRaw('rating DESC NULLS LAST')
+        break
+      case 'year_desc':
+        query.orderByRaw('release_year DESC NULLS LAST')
+        break
+      case 'year_asc':
+        query.orderByRaw('release_year ASC NULLS LAST')
         break
       default:
         query.orderBy('title', 'asc')
     }
 
     const series = await query
+    const genres = await Series.query()
+      .select('genre')
+      .whereNotNull('genre')
+      .whereNot('genre', '')
+      .distinct('genre')
+      .orderBy('genre', 'asc')
+      .then((rows) => rows.map((r) => r.genre).filter(Boolean) as string[])
+
+    const validSort =
+      sort === 'name_desc' ||
+      sort === 'date_desc' ||
+      sort === 'date_asc' ||
+      sort === 'rating_desc' ||
+      sort === 'year_desc' ||
+      sort === 'year_asc'
+        ? sort
+        : 'name_asc'
+
     return inertia.render('series/index', {
       series: series.map((s) => s.serialize()),
       searchQuery,
-      sort:
-        sort === 'name_desc' || sort === 'date_desc' || sort === 'rating_desc' ? sort : 'name_asc',
+      sort: validSort,
       ratedOnly,
+      genre: genre || undefined,
+      genres,
     })
   }
 
@@ -130,6 +163,8 @@ export default class SeriesController {
     series.tmdbId = payload.tmdbId ?? null
     series.backdropUrl = payload.backdropUrl ?? null
     series.themeUrl = payload.themeUrl ?? null
+    series.genre = payload.genre ?? null
+    series.releaseYear = payload.releaseYear ?? null
 
     const coverFile = request.file('coverImage')
     if (coverFile?.isValid) {
@@ -178,6 +213,8 @@ export default class SeriesController {
     series.tmdbId = payload.tmdbId ?? null
     series.backdropUrl = payload.backdropUrl ?? null
     series.themeUrl = payload.themeUrl ?? null
+    series.genre = payload.genre ?? null
+    series.releaseYear = payload.releaseYear ?? null
 
     const coverFile = request.file('coverImage')
     if (coverFile?.isValid) {
