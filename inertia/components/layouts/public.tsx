@@ -1,6 +1,7 @@
 import type { SharedProps } from '@adonisjs/inertia/types'
 import { Link, router, usePage } from '@inertiajs/react'
 import { ArrowRight, Menu } from 'lucide-react'
+import { BackToTop } from '@/components/back-to-top'
 import { FabulaDropdown } from '@/components/combination'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
@@ -103,6 +104,8 @@ export function PublicLayout({
         </header>
       )}
       <main className='flex-1'>{children}</main>
+
+      <BackToTop />
 
       {showFooter && (
         <>

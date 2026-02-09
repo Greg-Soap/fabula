@@ -19,10 +19,29 @@ function ensureUniqueSlug(baseSlug: string, excludeId?: string): Promise<string>
   })()
 }
 
+function escapeLikePattern(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_')
+}
+
 export default class SeriesController {
-  async index({ inertia }: HttpContext) {
-    const series = await Series.query().orderBy('created_at', 'desc')
-    return inertia.render('series/index', { series: series.map((s) => s.serialize()) })
+  async index({ inertia, request }: HttpContext) {
+    const searchQuery = (request.input('q') ?? '').trim()
+    const query = Series.query().orderBy('title', 'asc')
+
+    if (searchQuery) {
+      const pattern = `%${escapeLikePattern(searchQuery)}%`
+      query.where((builder) => {
+        builder
+          .whereRaw('title ILIKE ?', [pattern])
+          .orWhereRaw('short_description ILIKE ?', [pattern])
+      })
+    }
+
+    const series = await query
+    return inertia.render('series/index', {
+      series: series.map((s) => s.serialize()),
+      searchQuery,
+    })
   }
 
   async show({ params, inertia, response }: HttpContext) {
@@ -32,7 +51,7 @@ export default class SeriesController {
   }
 
   async dashboardIndex({ inertia }: HttpContext) {
-    const series = await Series.query().orderBy('created_at', 'desc')
+    const series = await Series.query().orderBy('title', 'asc')
     return inertia.render('dashboard/series/index', { series: series.map((s) => s.serialize()) })
   }
 

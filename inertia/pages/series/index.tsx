@@ -1,8 +1,10 @@
-import { Head, Link } from '@inertiajs/react'
-import { Film, Star } from 'lucide-react'
+import { Head, Link, router } from '@inertiajs/react'
+import { Film, Search, Star, X } from 'lucide-react'
 import { CalmPageBackground } from '@/components/calm-page-background'
 import { PublicLayout } from '@/components/layouts/public'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 
 interface SeriesItem {
   id: string
@@ -15,6 +17,7 @@ interface SeriesItem {
 
 interface SeriesIndexProps {
   series: SeriesItem[]
+  searchQuery?: string
 }
 
 function getCoverUrl(coverImage: SeriesItem['coverImage']): string | null {
@@ -22,7 +25,7 @@ function getCoverUrl(coverImage: SeriesItem['coverImage']): string | null {
   return (coverImage as { url?: string }).url ?? null
 }
 
-export default function SeriesIndex({ series }: SeriesIndexProps) {
+export default function SeriesIndex({ series, searchQuery = '' }: SeriesIndexProps) {
   return (
     <PublicLayout>
       <Head title='Series' />
@@ -38,6 +41,35 @@ export default function SeriesIndex({ series }: SeriesIndexProps) {
           style={{ animationDelay: '0.15s', animationFillMode: 'forwards' }}>
           Discover and share your favourite series.
         </p>
+
+        <form
+          method='get'
+          action='/series'
+          className='mt-8 opacity-0 animate-fabula-fade-in-up-subtle'
+          style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
+          <div className='relative max-w-md'>
+            <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+            <Input
+              type='search'
+              name='q'
+              defaultValue={searchQuery}
+              placeholder='Search by title or description…'
+              className='h-11 rounded-full border-border bg-background/80 pl-10 pr-10 focus-visible:ring-2'
+              autoComplete='off'
+            />
+            {searchQuery ? (
+              <Button
+                type='button'
+                variant='ghost'
+                size='icon'
+                className='absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full text-muted-foreground hover:text-foreground'
+                aria-label='Clear search'
+                onClick={() => router.get('/series')}>
+                <X className='h-4 w-4' />
+              </Button>
+            ) : null}
+          </div>
+        </form>
 
         <div className='mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
           {series.map((item, index) => {
@@ -90,7 +122,9 @@ export default function SeriesIndex({ series }: SeriesIndexProps) {
             className='mt-16 text-center text-muted-foreground opacity-0 animate-fabula-fade-in-up-subtle'
             style={{ animationDelay: '0.25s', animationFillMode: 'forwards' }}>
             <Film className='mx-auto h-12 w-12 opacity-50' />
-            <p className='mt-4'>No series in the catalog yet.</p>
+            <p className='mt-4'>
+              {searchQuery ? 'No series match your search.' : 'No series in the catalog yet.'}
+            </p>
           </div>
         )}
       </div>

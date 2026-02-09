@@ -21,7 +21,7 @@ function ensureUniqueSlug(baseSlug: string, excludeId?: string): Promise<string>
 
 export default class NovelsController {
   async index({ inertia }: HttpContext) {
-    const novels = await Novel.query().orderBy('created_at', 'desc')
+    const novels = await Novel.query().orderBy('title', 'asc')
     return inertia.render('novels/index', { novels: novels.map((n) => n.serialize()) })
   }
 
@@ -32,7 +32,7 @@ export default class NovelsController {
   }
 
   async dashboardIndex({ inertia }: HttpContext) {
-    const novels = await Novel.query().orderBy('created_at', 'desc')
+    const novels = await Novel.query().orderBy('title', 'asc')
     return inertia.render('dashboard/novels/index', { novels: novels.map((n) => n.serialize()) })
   }
 
