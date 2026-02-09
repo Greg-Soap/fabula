@@ -2,6 +2,7 @@ import env from '#start/env'
 
 const TMDB_BASE = 'https://api.themoviedb.org/3'
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500'
+const TMDB_BACKDROP_BASE = 'https://image.tmdb.org/t/p/w1280'
 
 export interface SeriesFetchResult {
   title?: string
@@ -11,6 +12,8 @@ export interface SeriesFetchResult {
   numberOfSeasons?: number
   trailerUrl?: string
   coverImageUrl?: string
+  tmdbId?: number
+  backdropUrl?: string
 }
 
 export class SeriesFetchService {
@@ -52,6 +55,7 @@ export class SeriesFetchService {
       number_of_seasons?: number
       vote_average?: number
       poster_path?: string | null
+      backdrop_path?: string | null
     }
 
     let trailerUrl: string | undefined
@@ -79,6 +83,10 @@ export class SeriesFetchService {
       details.poster_path != null && details.poster_path !== ''
         ? `${TMDB_IMAGE_BASE}${details.poster_path}`
         : undefined
+    const backdropUrl =
+      details.backdrop_path != null && details.backdrop_path !== ''
+        ? `${TMDB_BACKDROP_BASE}${details.backdrop_path}`
+        : undefined
 
     return {
       title,
@@ -88,6 +96,8 @@ export class SeriesFetchService {
       numberOfSeasons,
       trailerUrl,
       coverImageUrl,
+      tmdbId: first.id,
+      backdropUrl,
     }
   }
 }

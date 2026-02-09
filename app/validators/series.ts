@@ -17,6 +17,23 @@ const optionalCoverImageUrl = () =>
     .optional()
     .transform((v) => (v && v.length > 0 ? v : undefined))
 
+const optionalTmdbId = () =>
+  vine
+    .any()
+    .optional()
+    .transform((v) => {
+      if (v === '' || v === undefined || v === null) return undefined
+      const n = Number(v)
+      return Number.isInteger(n) ? n : undefined
+    })
+
+const optionalThemeUrl = () =>
+  vine
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v && v.length > 0 ? v : undefined))
+
 export const createSeriesValidator = vine.compile(
   vine.object({
     title: vine.string().trim().minLength(1).maxLength(255),
@@ -27,6 +44,13 @@ export const createSeriesValidator = vine.compile(
     trailerUrl: vine.string().trim().optional(),
     numberOfSeasons: optionalNumber(),
     coverImageUrl: optionalCoverImageUrl(),
+    tmdbId: optionalTmdbId(),
+    backdropUrl: vine
+      .string()
+      .trim()
+      .optional()
+      .transform((v) => (v && v.length > 0 ? v : undefined)),
+    themeUrl: optionalThemeUrl(),
   }),
 )
 
@@ -40,5 +64,12 @@ export const updateSeriesValidator = vine.compile(
     trailerUrl: vine.string().trim().optional(),
     numberOfSeasons: optionalNumber(),
     coverImageUrl: optionalCoverImageUrl(),
+    tmdbId: optionalTmdbId(),
+    backdropUrl: vine
+      .string()
+      .trim()
+      .optional()
+      .transform((v) => (v && v.length > 0 ? v : undefined)),
+    themeUrl: optionalThemeUrl(),
   }),
 )

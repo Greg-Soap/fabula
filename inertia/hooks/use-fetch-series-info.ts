@@ -10,6 +10,8 @@ export interface SeriesFetchPayload {
   numberOfSeasons?: number
   trailerUrl?: string
   coverImageUrl?: string
+  tmdbId?: number
+  backdropUrl?: string
 }
 
 function fetchSeriesInfo(query: string): Promise<SeriesFetchPayload> {

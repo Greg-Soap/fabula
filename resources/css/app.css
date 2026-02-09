@@ -336,6 +336,20 @@
   animation: fabula-fade-in-up 0.6s ease-out forwards;
 }
 
+/* Slow scale for detail-page background (1 -> 1.05 over 20s) */
+@keyframes fabula-detail-bg-zoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.05);
+  }
+}
+
+.animate-fabula-detail-bg-zoom {
+  animation: fabula-detail-bg-zoom 20s ease-in-out infinite alternate;
+}
+
 body {
   overflow-x: hidden;
 }

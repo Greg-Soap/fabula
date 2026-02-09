@@ -54,6 +54,9 @@ export default class SeriesController {
     series.personalReview = payload.personalReview ?? null
     series.trailerUrl = payload.trailerUrl ?? null
     series.numberOfSeasons = payload.numberOfSeasons ?? null
+    series.tmdbId = payload.tmdbId ?? null
+    series.backdropUrl = payload.backdropUrl ?? null
+    series.themeUrl = payload.themeUrl ?? null
 
     const coverFile = request.file('coverImage')
     if (coverFile?.isValid) {
@@ -99,6 +102,9 @@ export default class SeriesController {
     series.personalReview = payload.personalReview ?? null
     series.trailerUrl = payload.trailerUrl ?? null
     series.numberOfSeasons = payload.numberOfSeasons ?? null
+    series.tmdbId = payload.tmdbId ?? null
+    series.backdropUrl = payload.backdropUrl ?? null
+    series.themeUrl = payload.themeUrl ?? null
 
     const coverFile = request.file('coverImage')
     if (coverFile?.isValid) {

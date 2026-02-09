@@ -1,8 +1,10 @@
 import { Head, Link } from '@inertiajs/react'
-import { ArrowLeft, BookOpen, ExternalLink, Star } from 'lucide-react'
-import { CalmPageBackground } from '@/components/calm-page-background'
+import { ArrowLeft, BookOpen, ExternalLink, Music2, Star } from 'lucide-react'
+import { DetailPageBackground } from '@/components/detail-page-background'
 import { PublicLayout } from '@/components/layouts/public'
 import { Button } from '@/components/ui/button'
+import { useThemeAutoplay } from '@/hooks/use-theme-autoplay'
+import { getYouTubeEmbedUrl } from '@/lib/youtube'
 
 interface NovelShowProps {
   novel: {
@@ -16,6 +18,7 @@ interface NovelShowProps {
     personalReview: string | null
     externalLink: string | null
     numberOfChapters: number | null
+    themeUrl: string | null
   }
 }
 
@@ -26,11 +29,18 @@ function getCoverUrl(coverImage: NovelShowProps['novel']['coverImage']): string 
 
 export default function NovelShow({ novel }: NovelShowProps) {
   const coverUrl = getCoverUrl(novel.coverImage)
+  const {
+    videoId: themeVideoId,
+    containerId: themeContainerId,
+    playTheme,
+    playFailed,
+  } = useThemeAutoplay(novel.themeUrl)
+  const themeEmbedUrlFallback = getYouTubeEmbedUrl(novel.themeUrl, { mute: true })
 
   return (
     <PublicLayout>
       <Head title={novel.title} />
-      <CalmPageBackground />
+      <DetailPageBackground imageUrl={coverUrl} />
       <div className='relative max-w-screen-xl mx-auto px-6 py-12'>
         <Button
           variant='ghost'
@@ -100,6 +110,52 @@ export default function NovelShow({ novel }: NovelShowProps) {
                     Find on Amazon / Kindle / Novel Updates
                   </a>
                 </Button>
+              </div>
+            )}
+
+            {novel.themeUrl && (
+              <div>
+                <h2 className='text-lg font-semibold'>Theme</h2>
+                <div className='mt-2 flex flex-col gap-2'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    asChild
+                    rightIcon={<ExternalLink className='h-4 w-4' />}>
+                    <a href={novel.themeUrl} target='_blank' rel='noopener noreferrer'>
+                      Listen to theme
+                    </a>
+                  </Button>
+                  {themeVideoId && themeContainerId ? (
+                    <>
+                      <div className='aspect-video w-full max-w-md overflow-hidden rounded-lg bg-muted'>
+                        <div id={themeContainerId} className='h-full w-full' />
+                      </div>
+                      {playFailed && (
+                        <Button
+                          type='button'
+                          variant='secondary'
+                          size='sm'
+                          leftIcon={<Music2 className='h-4 w-4' />}
+                          onClick={playTheme}>
+                          Play theme
+                        </Button>
+                      )}
+                    </>
+                  ) : (
+                    themeEmbedUrlFallback && (
+                      <div className='aspect-video w-full max-w-md overflow-hidden rounded-lg bg-muted'>
+                        <iframe
+                          title='Theme'
+                          src={themeEmbedUrlFallback}
+                          className='h-full w-full'
+                          allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
+                          allowFullScreen
+                        />
+                      </div>
+                    )
+                  )}
+                </div>
               </div>
             )}
           </div>

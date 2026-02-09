@@ -18,6 +18,7 @@ interface NovelEditProps {
     personalReview: string | null
     externalLink: string | null
     numberOfChapters: number | null
+    themeUrl: string | null
     coverImage?: { url?: string } | null
   }
 }
@@ -35,6 +36,7 @@ export default function DashboardNovelsEdit({ novel }: NovelEditProps) {
     numberOfChapters: novel.numberOfChapters ?? ('' as string | number),
     coverImage: null as File | null,
     coverImageUrl: '',
+    themeUrl: novel.themeUrl ?? '',
   })
 
   const { mutate: fetchInfo, isPending: isFetching } = useFetchNovelInfo({
@@ -172,6 +174,16 @@ export default function DashboardNovelsEdit({ novel }: NovelEditProps) {
               error={form.errors.numberOfChapters}
               type='number'
               min={0}
+            />
+
+            <TextInput
+              label='Theme / soundtrack URL (YouTube, Spotify, etc.)'
+              name='themeUrl'
+              value={form.data.themeUrl}
+              onChange={(e) => form.setData('themeUrl', e.target.value)}
+              error={form.errors.themeUrl}
+              type='url'
+              placeholder='https://www.youtube.com/watch?v=...'
             />
 
             <div className='flex gap-4'>

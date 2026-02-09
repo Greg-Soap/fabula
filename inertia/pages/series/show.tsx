@@ -1,8 +1,10 @@
 import { Head, Link } from '@inertiajs/react'
-import { ArrowLeft, Film, Star } from 'lucide-react'
-import { CalmPageBackground } from '@/components/calm-page-background'
+import { ArrowLeft, ExternalLink, Film, Music2, Star } from 'lucide-react'
+import { DetailPageBackground } from '@/components/detail-page-background'
 import { PublicLayout } from '@/components/layouts/public'
 import { Button } from '@/components/ui/button'
+import { useThemeAutoplay } from '@/hooks/use-theme-autoplay'
+import { getYouTubeEmbedUrl } from '@/lib/youtube'
 
 interface SeriesShowProps {
   series: {
@@ -16,6 +18,8 @@ interface SeriesShowProps {
     personalReview: string | null
     trailerUrl: string | null
     numberOfSeasons: number | null
+    backdropUrl: string | null
+    themeUrl: string | null
   }
 }
 
@@ -24,20 +28,22 @@ function getCoverUrl(coverImage: SeriesShowProps['series']['coverImage']): strin
   return (coverImage as { url?: string }).url ?? null
 }
 
-function getYouTubeEmbedUrl(url: string | null): string | null {
-  if (!url || typeof url !== 'string') return null
-  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/)
-  return match ? `https://www.youtube.com/embed/${match[1]}` : null
-}
-
 export default function SeriesShow({ series }: SeriesShowProps) {
   const coverUrl = getCoverUrl(series.coverImage)
+  const backgroundImageUrl = series.backdropUrl ?? coverUrl
   const embedUrl = getYouTubeEmbedUrl(series.trailerUrl)
+  const {
+    videoId: themeVideoId,
+    containerId: themeContainerId,
+    playTheme,
+    playFailed,
+  } = useThemeAutoplay(series.themeUrl)
+  const themeEmbedUrlFallback = getYouTubeEmbedUrl(series.themeUrl, { mute: true })
 
   return (
     <PublicLayout>
       <Head title={series.title} />
-      <CalmPageBackground />
+      <DetailPageBackground imageUrl={backgroundImageUrl} />
       <div className='relative max-w-screen-xl mx-auto px-6 py-12'>
         <Button
           variant='ghost'
@@ -115,6 +121,53 @@ export default function SeriesShow({ series }: SeriesShowProps) {
                     allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
                     allowFullScreen
                   />
+                </div>
+              </div>
+            )}
+
+            {series.themeUrl && (
+              <div>
+                <h2 className='text-lg font-semibold'>Theme</h2>
+                <div className='mt-2 flex flex-col gap-2'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    asChild
+                    className='w-[200px]'
+                    rightIcon={<ExternalLink className='h-4 w-4' />}>
+                    <a href={series.themeUrl} target='_blank' rel='noopener noreferrer'>
+                      Listen to theme
+                    </a>
+                  </Button>
+                  {themeVideoId && themeContainerId ? (
+                    <>
+                      <div className='aspect-video w-full max-w-md overflow-hidden rounded-lg bg-muted'>
+                        <div id={themeContainerId} className='h-full w-full' />
+                      </div>
+                      {playFailed && (
+                        <Button
+                          type='button'
+                          variant='secondary'
+                          size='sm'
+                          leftIcon={<Music2 className='h-4 w-4' />}
+                          onClick={playTheme}>
+                          Play theme
+                        </Button>
+                      )}
+                    </>
+                  ) : (
+                    themeEmbedUrlFallback && (
+                      <div className='aspect-video w-full max-w-md overflow-hidden rounded-lg bg-muted'>
+                        <iframe
+                          title='Theme'
+                          src={themeEmbedUrlFallback}
+                          className='h-full w-full'
+                          allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
+                          allowFullScreen
+                        />
+                      </div>
+                    )
+                  )}
                 </div>
               </div>
             )}

@@ -21,6 +21,7 @@ export default function DashboardNovelsCreate() {
     numberOfChapters: '' as string | number,
     coverImage: null as File | null,
     coverImageUrl: '',
+    themeUrl: '',
   })
 
   const { mutate: fetchInfo, isPending: isFetching } = useFetchNovelInfo({
@@ -161,6 +162,16 @@ export default function DashboardNovelsCreate() {
               error={form.errors.numberOfChapters}
               type='number'
               min={0}
+            />
+
+            <TextInput
+              label='Theme / soundtrack URL (YouTube, Spotify, etc.)'
+              name='themeUrl'
+              value={form.data.themeUrl}
+              onChange={(e) => form.setData('themeUrl', e.target.value)}
+              error={form.errors.themeUrl}
+              type='url'
+              placeholder='https://www.youtube.com/watch?v=...'
             />
 
             <div className='flex gap-4'>

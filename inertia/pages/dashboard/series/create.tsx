@@ -21,6 +21,9 @@ export default function DashboardSeriesCreate() {
     numberOfSeasons: '' as string | number,
     coverImage: null as File | null,
     coverImageUrl: '',
+    tmdbId: undefined as number | undefined,
+    backdropUrl: '',
+    themeUrl: '',
   })
 
   const { mutate: fetchInfo, isPending: isFetching } = useFetchSeriesInfo({
@@ -34,6 +37,8 @@ export default function DashboardSeriesCreate() {
         ...(data.numberOfSeasons != null && { numberOfSeasons: data.numberOfSeasons }),
         ...(data.trailerUrl != null && { trailerUrl: data.trailerUrl }),
         ...(data.coverImageUrl != null && { coverImageUrl: data.coverImageUrl }),
+        ...(data.tmdbId != null && { tmdbId: data.tmdbId }),
+        ...(data.backdropUrl != null && { backdropUrl: data.backdropUrl }),
       })
     },
   })
@@ -160,6 +165,16 @@ export default function DashboardSeriesCreate() {
               error={form.errors.numberOfSeasons}
               type='number'
               min={0}
+            />
+
+            <TextInput
+              label='Theme / soundtrack URL (YouTube, Spotify, etc.)'
+              name='themeUrl'
+              value={form.data.themeUrl}
+              onChange={(e) => form.setData('themeUrl', e.target.value)}
+              error={form.errors.themeUrl}
+              type='url'
+              placeholder='https://www.youtube.com/watch?v=...'
             />
 
             <div className='flex gap-4'>

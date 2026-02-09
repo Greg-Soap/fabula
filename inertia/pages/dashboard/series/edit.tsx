@@ -18,6 +18,9 @@ interface SeriesEditProps {
     personalReview: string | null
     trailerUrl: string | null
     numberOfSeasons: number | null
+    tmdbId: number | null
+    backdropUrl: string | null
+    themeUrl: string | null
     coverImage?: { url?: string } | null
   }
 }
@@ -35,6 +38,9 @@ export default function DashboardSeriesEdit({ series }: SeriesEditProps) {
     numberOfSeasons: series.numberOfSeasons ?? ('' as string | number),
     coverImage: null as File | null,
     coverImageUrl: '',
+    tmdbId: series.tmdbId ?? undefined,
+    backdropUrl: series.backdropUrl ?? '',
+    themeUrl: series.themeUrl ?? '',
   })
 
   const { mutate: fetchInfo, isPending: isFetching } = useFetchSeriesInfo({
@@ -48,6 +54,8 @@ export default function DashboardSeriesEdit({ series }: SeriesEditProps) {
         ...(data.numberOfSeasons != null && { numberOfSeasons: data.numberOfSeasons }),
         ...(data.trailerUrl != null && { trailerUrl: data.trailerUrl }),
         ...(data.coverImageUrl != null && { coverImageUrl: data.coverImageUrl }),
+        ...(data.tmdbId != null && { tmdbId: data.tmdbId }),
+        ...(data.backdropUrl != null && { backdropUrl: data.backdropUrl }),
       })
     },
     successMessage: 'Series info updated. Your personal review was kept.',
@@ -171,6 +179,16 @@ export default function DashboardSeriesEdit({ series }: SeriesEditProps) {
               error={form.errors.numberOfSeasons}
               type='number'
               min={0}
+            />
+
+            <TextInput
+              label='Theme / soundtrack URL (YouTube, Spotify, etc.)'
+              name='themeUrl'
+              value={form.data.themeUrl}
+              onChange={(e) => form.setData('themeUrl', e.target.value)}
+              error={form.errors.themeUrl}
+              type='url'
+              placeholder='https://www.youtube.com/watch?v=...'
             />
 
             <div className='flex gap-4'>

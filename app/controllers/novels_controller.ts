@@ -54,6 +54,7 @@ export default class NovelsController {
     novel.personalReview = payload.personalReview ?? null
     novel.externalLink = payload.externalLink ?? null
     novel.numberOfChapters = payload.numberOfChapters ?? null
+    novel.themeUrl = payload.themeUrl ?? null
 
     const coverFile = request.file('coverImage')
     if (coverFile?.isValid) {
@@ -99,6 +100,7 @@ export default class NovelsController {
     novel.personalReview = payload.personalReview ?? null
     novel.externalLink = payload.externalLink ?? null
     novel.numberOfChapters = payload.numberOfChapters ?? null
+    novel.themeUrl = payload.themeUrl ?? null
 
     const coverFile = request.file('coverImage')
     if (coverFile?.isValid) {

@@ -27,6 +27,11 @@ export const createNovelValidator = vine.compile(
     externalLink: vine.string().trim().optional(),
     numberOfChapters: optionalNumber(),
     coverImageUrl: optionalCoverImageUrl(),
+    themeUrl: vine
+      .string()
+      .trim()
+      .optional()
+      .transform((v) => (v && v.length > 0 ? v : undefined)),
   }),
 )
 
@@ -40,5 +45,10 @@ export const updateNovelValidator = vine.compile(
     externalLink: vine.string().trim().optional(),
     numberOfChapters: optionalNumber(),
     coverImageUrl: optionalCoverImageUrl(),
+    themeUrl: vine
+      .string()
+      .trim()
+      .optional()
+      .transform((v) => (v && v.length > 0 ? v : undefined)),
   }),
 )

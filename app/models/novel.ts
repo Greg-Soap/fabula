@@ -36,6 +36,9 @@ export default class Novel extends SuperBaseModel {
   @column()
   declare numberOfChapters: number | null
 
+  @column()
+  declare themeUrl: string | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

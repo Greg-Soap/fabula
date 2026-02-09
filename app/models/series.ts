@@ -36,6 +36,15 @@ export default class Series extends SuperBaseModel {
   @column()
   declare numberOfSeasons: number | null
 
+  @column()
+  declare tmdbId: number | null
+
+  @column()
+  declare backdropUrl: string | null
+
+  @column()
+  declare themeUrl: string | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
